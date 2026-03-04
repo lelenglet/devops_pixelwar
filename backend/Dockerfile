@@ -8,6 +8,7 @@ COPY package*.json ./
 
 # Installation des dépendances de prod
 RUN npm ci --omit=dev
+# RUN npm install --production
 
 COPY . .
 
@@ -17,7 +18,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copier uniquement ce qui est nécessaire
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=builder /app/node_modules ./node_modules
 
 COPY . .
 
