@@ -6,7 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Clean install : équivalent de npm install
-RUN npm ci
+# RUN npm ci
+RUN npm install
 
 COPY . .
 
@@ -16,7 +17,7 @@ RUN npm run build
 FROM nginx:stable-alpine
 
 # Copie du build React vers le dossier public de Nginx
-COPY --from=builder /app/build /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
