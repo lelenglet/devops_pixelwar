@@ -46,11 +46,7 @@ kubectl apply -f kubernetes/backend/
 kubectl apply -f kubernetes/frontend/
 ```
 
-Avec la config Kind (`kind-config.yaml`), les ports sont mappés automatiquement : pas besoin de `kubectl port-forward`.
-
-- **Frontend** : [http://localhost:8080](http://localhost:8080/)
-- **Backend** : http://localhost:3000
-
+La config Kind va mapper automatiquement les ports, plus besoin de `kubectl port-forward`.
 
 ## Terraform
 ```bash
@@ -59,38 +55,27 @@ terraform init
 terraform plan
 terraform apply
 ```
-Si vous obtenez une erreur `Cannot create resource that already exists`, vous pouvez tout supprimer avec `kubectl delete namespace pixelwar`
+
+- **Frontend** : [http://localhost:8080](http://localhost:8080/)
+- **Backend** : http://localhost:3000
 
 
-Si vous avez ensuite l'erreur `kind create cluster --name pixel-war --config kind-config.yaml`, vous pouvez `cd ..; kind create cluster --name pixel-war --config kind-config.yaml`
+# Tester l'infra
 
-## Tester l'infra
-
-### Vérifier Terraform
+## Vérifier Terraform
 ```bash
 terraform state list
 terraform output
 kubectl get all -n pixelwar
 ```
 
-### Faire des requêtes
+## Faire des requêtes
 
-**Frontend** (accessible directement) :
-```bash
-curl http://localhost:8080/
-```
-
-**Backend** (accessible directement) :
-```bash
-curl http://localhost:3000/
-```
-
-**Base de données** (vérification) :
+Tester la base de donnée :
 ```bash
 kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "SELECT 1;"
 ```
 
-# Mémo
 ```bash
 kind delete cluster --name pixel-war
 kubectl get all -n pixelwar 
