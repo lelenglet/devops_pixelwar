@@ -33,6 +33,19 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - name: Cluster kind
+      - name: Cluster kind creation
         run: |
           kind create cluster --name pixel-war --config kind-config.yaml
+      - name: Loading app images
+        run: |
+          kind load docker-image app-frontend:v1 --name pixel-war
+          kind load docker-image app-backend:v1 --name pixel-war
+      - name: Manifest deployement
+        run: |
+          kubectl apply -f kubernetes/namespace.yaml
+          kubectl apply -f kubernetes/db/
+          kubectl apply -f kubernetes/backend/
+          kubectl apply -f kubernetes/frontend/
+      - name: Manifest display 
+        run: |
+          kubectl get all -n pixel-war
