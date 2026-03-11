@@ -25,3 +25,25 @@ Déploiement de tous les fichiers avec la commande :
 ```bash
 kubectl apply -f kubernetes/ --recursive
 ```
+
+Création du cluster avec kind :
+```
+kind create cluster --name pixel-war --config kind-config.yaml
+```
+
+Chargement des images :
+
+kind load docker-image app-frontend:v1 --name pixel-war
+kind load docker-image app-backend:v1 --name pixel-war
+
+Deploiement des manifests (le namespace doit être déployé en premier car il est utilisé par les autres fichiers) :
+
+kubectl apply -f kubernetes/namespace.yaml
+kubectl apply -f kubernetes/db/
+kubectl apply -f kubernetes/backend/
+kubectl apply -f kubernetes/frontend/
+
+Front accésible sur le localhost:8080 avec la commande :
+```
+kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar
+```

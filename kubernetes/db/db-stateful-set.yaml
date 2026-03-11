@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgresdb
-  namespace: default
+  namespace: pixelwar
 spec:
   serviceName: "postgresdb"
   replicas: 1
