@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
-    globals: true, // Permet d'utiliser describe, it, expect sans les importer
-    setupFiles: ["./src/setupTests.js"], // Charge le pont créé à l'étape 1
+    globals: true,
+    deps: {
+      inline: ["vitest-canvas-mock"],
+    },
+    setupFiles: ["./src/setupTests.js"],
   },
 });
