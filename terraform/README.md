@@ -13,7 +13,29 @@ terraform apply
 
 # Tuto
 [Tuto](https://developer.hashicorp.com/terraform/tutorials/kubernetes/kubernetes-provider)
+- Installer kind et kubectl sur votre pc puis
+```bash
+curl https://raw.githubusercontent.com/hashicorp/learn-terraform-deploy-nginx-kubernetes-provider/main/kind-config.yaml --output kind-config.yaml
+kind create cluster --name terraform-learn --config kind-config.yaml
 
+kind get clusters
+kubectl cluster-info --context kind-terraform-learn
+```
+
+On va ensuite mettre à jour les variables de `terraform.tfvars` avec les valeurs de
+```bash
+kubectl config view --minify --flatten --context=kind-terraform-learn
+```
+
+On va lister nos instances:
+```bash
+kubectl get services
+NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+kubernetes      ClusterIP   10.96.0.1      <none>        443/TCP        21m
+nginx-example   NodePort    10.96.160.55   <none>        80:30201/TCP   14s
+```
+
+On peux accéder à notre Nginx: `curl http://localhost:30201/`
 
 
 # Prise de notes
