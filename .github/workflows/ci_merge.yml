@@ -1,6 +1,9 @@
 name: CI-merge Pixel War
 
-on: [push]
+on:
+  push:
+    branches:
+      - ci_cd
 
 jobs:
   test:
