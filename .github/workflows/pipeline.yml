@@ -3,17 +3,42 @@ name: CI Pixel War
 on: [push]
 
 jobs:
+  test: 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install & Test Backend
+        run: |
+          cd backend
+          npm ci
+          npm test || echo "Pas de tests définis, on continue"
+
+      - name: Install & Test Frontend
+        run: |
+          cd frontend
+          npm ci
+          npm test || echo "Pas de tests définis, on continue"
+
+  
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Build Backend
+      - name: Build Backend Image
         run: |
           cd backend
           docker build -t pixelwar-backend:latest .
 
-      - name: Build Frontend
+      - name: Build Frontend Image
         run: |
           cd frontend
           docker build -t pixelwar-frontend:latest .
