@@ -17,6 +17,9 @@ locals {
   kubernetes_path = "${path.module}/../kubernetes"
 }
 
+# Déploiement Pixel War : namespace, DB (PostgreSQL), backend, frontend.
+# Les manifests sont chargés depuis ../kubernetes/ et appliqués dans l'ordre des dépendances.
+
 ### Namespace ─────────────────────────────────────────────────────────────────────
 resource "kubernetes_manifest" "namespace" {
   manifest = yamldecode(file("${local.kubernetes_path}/namespace.yaml"))
@@ -52,7 +55,7 @@ resource "kubernetes_manifest" "backend_service" {
 ### Frontend ────────────────────────────────────────────────────────────────────
 resource "kubernetes_manifest" "frontend_deployment" {
   manifest   = yamldecode(file("${local.kubernetes_path}/frontend/frontend-deployment.yml"))
-  depends_on = [kubernetes_manifest.namespace]
+  depends_on = [kubernetes_manifest.namespace, kubernetes_manifest.backend_service]
 }
 
 resource "kubernetes_manifest" "frontend_service" {
@@ -60,85 +63,18 @@ resource "kubernetes_manifest" "frontend_service" {
   depends_on = [kubernetes_manifest.namespace, kubernetes_manifest.frontend_deployment]
 }
 
-### Utilisateur user ────────────────────────────────────────────────────────────
-resource "kubernetes_secret" "demo_auth" {
-  metadata {
-    name      = "demo-auth"
-    namespace = "default"
-  }
-
-  data = {
-    username = "user"
-    password = "dino"
-  }
+### Outputs ───────────────────────────────────────────────────────────────────
+output "namespace" {
+  description = "Namespace Kubernetes du déploiement Pixel War"
+  value       = "pixelwar"
 }
 
-
-
-
-### Ressources ────────────────────────────────────────────────────────────
-resource "kubernetes_deployment_v1" "nginx" {
-  metadata {
-    name = "scalable-nginx-example"
-    labels = {
-      App = "ScalableNginxExample"
-    }
-  }
-
-  spec {
-    replicas = 2
-    selector {
-      match_labels = {
-        App = "ScalableNginxExample"
-      }
-    }
-    template {
-      metadata {
-        labels = {
-          App = "ScalableNginxExample"
-        }
-      }
-      spec {
-        container {
-          image = "nginx:stable-alpine-slim"
-          name  = "example"
-
-          port {
-            container_port = 80
-          }
-
-          resources {
-            limits = {
-              cpu    = "0.5"
-              memory = "512Mi"
-            }
-            requests = {
-              cpu    = "250m"
-              memory = "50Mi"
-            }
-          }
-        }
-      }
-    }
-  }
+output "port_forward_frontend" {
+  description = "Commande pour exposer le frontend en local"
+  value       = "kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar"
 }
 
-
-### Load balancer ────────────────────────────────────────────────────────────
-resource "kubernetes_service_v1" "nginx" {
-  metadata {
-    name = "nginx-example"
-  }
-  spec {
-    selector = {
-      App = kubernetes_deployment_v1.nginx.spec.0.template.0.metadata[0].labels.App
-    }
-    port {
-      node_port   = 30201
-      port        = 80
-      target_port = 80
-    }
-
-    type = "NodePort"
-  }
+output "port_forward_backend" {
+  description = "Commande pour exposer le backend en local"
+  value       = "kubectl port-forward svc/pixelwar-back-service 3000:3000 -n pixelwar"
 }

@@ -66,7 +66,8 @@ terraform init
 terraform plan
 terraform apply
 ```
-Si vous obtenez une erreur `Cannot create resource that already exists`, vous pouvez tout supprimer avec `kind delete cluster --name pixel-war`
+Si vous obtenez une erreur `Cannot create resource that already exists`, vous pouvez tout supprimer avec `kubectl delete namespace pixelwar`
+
 
 Si vous avez ensuite l'erreur `kind create cluster --name pixel-war --config kind-config.yaml`, vous pouvez `cd ..; kind create cluster --name pixel-war --config kind-config.yaml`
 
@@ -75,15 +76,11 @@ Si vous avez ensuite l'erreur `kind create cluster --name pixel-war --config kin
 ### Vérifier Terraform
 ```bash
 terraform state list
+terraform output
 kubectl get all -n pixelwar
 ```
 
 ### Faire des requêtes
-
-**Nginx** (exemple Terraform, port NodePort 30201) :
-```bash
-curl http://localhost:30201/
-```
 
 **Frontend** (nécessite un port-forward) :
 ```bash
