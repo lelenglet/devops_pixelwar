@@ -1,6 +1,6 @@
 name: CI Pixel War
 
-on: [push]
+on: [merge]
 
 jobs:
   test: 
@@ -28,18 +28,12 @@ jobs:
           npm ci
           npm test || echo "Pas de tests définis, on continue"
 
-  
-  build:
+  build: 
     runs-on: ubuntu-latest
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - name: Build Backend Image
+      - name: Cluster kind 
         run: |
-          cd backend
-          docker build -t pixelwar-backend:latest .
-
-      - name: Build Frontend Image
-        run: |
-          cd frontend
-          docker build -t pixelwar-frontend:latest .
+          kind create cluster --name pixel-war --config kind-config.yaml
+        
