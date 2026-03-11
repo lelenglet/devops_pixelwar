@@ -1,4 +1,4 @@
-name: CI Pixel War
+name: CI-merge Pixel War
 
 on: [push]
 
