@@ -5,6 +5,7 @@ import App from "./App";
 describe("Composant App", () => {
   it("devrait afficher le titre Pixel War", () => {
     render(<App />);
-    expect(screen.getByText(/Pixel War/i)).toBeInTheDocument();
+    const titleElement = screen.getByText(/Pixel War/i);
+    expect(titleElement).toBeInTheDocument();
   });
 });
