@@ -9,24 +9,20 @@ terraform {
 }
 
 provider "kubernetes" {
-  host = var.host
   config_path    = var.kube_config_path
   config_context = var.kube_config_context
-
-  client_certificate     = base64decode(var.client_certificate)
-  client_key             = base64decode(var.client_key)
-  cluster_ca_certificate = base64decode(var.cluster_ca_certificate)
 }
 
 locals {
   kubernetes_path = "${path.module}/../kubernetes"
 }
 
-### Manifests Kubernetes (dossier kubernetes/) ────────────────────────────────
+### Namespace ─────────────────────────────────────────────────────────────────────
 resource "kubernetes_manifest" "namespace" {
   manifest = yamldecode(file("${local.kubernetes_path}/namespace.yaml"))
 }
 
+### Database ─────────────────────────────────────────────────────────────────────
 resource "kubernetes_manifest" "db_secret" {
   manifest   = yamldecode(file("${local.kubernetes_path}/db/db-secret.yaml"))
   depends_on = [kubernetes_manifest.namespace]
@@ -40,6 +36,28 @@ resource "kubernetes_manifest" "db_svc" {
 resource "kubernetes_manifest" "db_stateful_set" {
   manifest   = yamldecode(file("${local.kubernetes_path}/db/db-stateful-set.yaml"))
   depends_on = [kubernetes_manifest.db_secret, kubernetes_manifest.db_svc]
+}
+
+### Backend ─────────────────────────────────────────────────────────────────────
+resource "kubernetes_manifest" "backend_deployment" {
+  manifest   = yamldecode(file("${local.kubernetes_path}/backend/backend-deployment.yml"))
+  depends_on = [kubernetes_manifest.namespace, kubernetes_manifest.db_stateful_set]
+}
+
+resource "kubernetes_manifest" "backend_service" {
+  manifest   = yamldecode(file("${local.kubernetes_path}/backend/backend-service.yml"))
+  depends_on = [kubernetes_manifest.namespace, kubernetes_manifest.backend_deployment]
+}
+
+### Frontend ────────────────────────────────────────────────────────────────────
+resource "kubernetes_manifest" "frontend_deployment" {
+  manifest   = yamldecode(file("${local.kubernetes_path}/frontend/frontend-deployment.yml"))
+  depends_on = [kubernetes_manifest.namespace]
+}
+
+resource "kubernetes_manifest" "frontend_service" {
+  manifest   = yamldecode(file("${local.kubernetes_path}/frontend/frontend-service.yml"))
+  depends_on = [kubernetes_manifest.namespace, kubernetes_manifest.frontend_deployment]
 }
 
 ### Utilisateur user ────────────────────────────────────────────────────────────
@@ -56,22 +74,6 @@ resource "kubernetes_secret" "demo_auth" {
 }
 
 
-### Variables ────────────────────────────────────────────────────────────
-variable "host" {
-  type = string
-}
-
-variable "client_certificate" {
-  type = string
-}
-
-variable "client_key" {
-  type = string
-}
-
-variable "cluster_ca_certificate" {
-  type = string
-}
 
 
 ### Ressources ────────────────────────────────────────────────────────────

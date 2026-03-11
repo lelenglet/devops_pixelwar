@@ -45,8 +45,48 @@ Front accésible sur le [localhost:8080](http://localhost:8080/) avec la command
 kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar
 ```
 
+## Terraform
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+Si vous obtenez une erreur `Cannot create resource that already exists`, vous pouvez tout supprimer avec `kind delete cluster --name pixel-war`
+
+Si vous avez ensuite l'erreur `kind create cluster --name pixel-war --config kind-config.yaml`, vous pouvez `cd ..; kind create cluster --name pixel-war --config kind-config.yaml`
+
+## Tester l'infra
+
+### Vérifier Terraform
+```bash
+terraform state list
+kubectl get all -n pixelwar
+```
+
+### Faire des requêtes
+
+**Nginx** (exemple Terraform, port NodePort 30201) :
+```bash
+curl http://localhost:30201/
+```
+
+**Frontend** (nécessite un port-forward) :
+```bash
+kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar &
+curl http://localhost:8080/
+# Puis : kill %1  pour arrêter le port-forward
+```
+
+**Base de données** (vérification) :
+```bash
+kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "SELECT 1;"
+```
+
 # Mémo
 ```bash
 kind delete cluster --name pixel-war
 kubectl get all -n pixelwar 
+terraform state list
 ```
+

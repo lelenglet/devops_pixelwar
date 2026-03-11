@@ -5,7 +5,7 @@ variable "kube_config_path" {
 }
 
 variable "kube_config_context" {
-  description = "Context Kubernetes à utiliser (ex: kind-terraform-learn)"
+  description = "Context Kubernetes à utiliser (ex: kind-pixel-war)"
   type        = string
-  default     = "kind-terraform-learn"
+  default     = "kind-pixel-war"
 }

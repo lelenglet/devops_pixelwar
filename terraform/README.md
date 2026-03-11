@@ -6,6 +6,20 @@ terraform plan
 terraform apply
 ```
 
+## Vérifier que tout va bien
+```bash
+# Le plan doit indiquer qu'aucun changement n'est nécessaire
+terraform plan
+# Attendu : "No changes. Your infrastructure matches the configuration."
+
+# Lister les ressources gérées par Terraform
+terraform state list
+
+# En cas d'erreur "context does not exist" : vérifier le contexte disponible
+kubectl config get-contexts
+# Puis définir kube_config_context dans terraform.tfvars si nécessaire
+```
+
 # Tuto
 
 ## Tester l'infra
@@ -16,10 +30,10 @@ terraform apply
 # Namespace
 kubectl get namespace pixelwar
 
-# Ressources de la base (namespace default)
-kubectl get secret db-credentials
-kubectl get svc postgresdb
-kubectl get statefulset postgresdb
+# Ressources de la base (namespace pixelwar)
+kubectl get secret db-credentials -n pixelwar
+kubectl get svc postgresdb -n pixelwar
+kubectl get statefulset postgresdb -n pixelwar
 
 NAME             TYPE     DATA   AGE
 db-credentials   Opaque   3      111s
@@ -29,27 +43,27 @@ NAME         READY   AGE
 postgresdb   1/1     111s
 
 # Statut des pods
-kubectl get pods -l app=postgresdb
+kubectl get pods -l app=postgresdb -n pixelwar
 
 # ─── Tester la BDD ───
-kubectl exec -it postgresdb-0 -- psql -U testUser -d testDB -c "SELECT 1;"
+kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "SELECT 1;"
 
 
 # ─── Tester la persistance de la BDD ───
 # Créer une table de test
-kubectl exec -it postgresdb-0 -- psql -U testUser -d testDB -c "
+kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "
   CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, value TEXT);
   INSERT INTO test (value) VALUES ('persistence test');
 "
 
 # Supprimer le pod (le StatefulSet le recréera)
-kubectl delete pod postgresdb-0
+kubectl delete pod postgresdb-0 -n pixelwar
 
 # Attendre le redémarrage
-kubectl wait --for=condition=ready pod -l app=postgresdb --timeout=120s
+kubectl wait --for=condition=ready pod -l app=postgresdb -n pixelwar --timeout=120s
 
 # Vérifier que les données sont toujours là
-kubectl exec -it postgresdb-0 -- psql -U testUser -d testDB -c "SELECT * FROM test;"
+kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "SELECT * FROM test;"
 ```
 
 ## Prise de note sur l'install
