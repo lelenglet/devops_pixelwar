@@ -6,6 +6,14 @@ metadata:
 spec:
   serviceName: "postgresdb"
   replicas: 1
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
   selector:
     matchLabels:
       app: postgresdb

@@ -1,17 +1,58 @@
 # Terraform
 ## Prise en main
-- Télécharger votre openrc.sh depuis [https://193.49.167.10](https://193.49.167.10)
-- Renommer le openrc.sh, puis:
 ```bash
-chmod +x openrc.sh
-source openrc.sh   # ou: . openrc.sh  (requis pour exporter OS_* vers terraform)
-
 terraform init
 terraform plan
 terraform apply
 ```
 
 # Tuto
+
+## Tester l'infra
+```bash
+terraform init
+terraform apply
+# ─── Vérifier les ressources ───
+# Namespace
+kubectl get namespace pixelwar
+
+# Ressources de la base (namespace default)
+kubectl get secret db-credentials
+kubectl get svc postgresdb
+kubectl get statefulset postgresdb
+
+NAME             TYPE     DATA   AGE
+db-credentials   Opaque   3      111s
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+postgresdb   ClusterIP   None         <none>        5432/TCP   111s
+NAME         READY   AGE
+postgresdb   1/1     111s
+
+# Statut des pods
+kubectl get pods -l app=postgresdb
+
+# ─── Tester la BDD ───
+kubectl exec -it postgresdb-0 -- psql -U testUser -d testDB -c "SELECT 1;"
+
+
+# ─── Tester la persistance de la BDD ───
+# Créer une table de test
+kubectl exec -it postgresdb-0 -- psql -U testUser -d testDB -c "
+  CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, value TEXT);
+  INSERT INTO test (value) VALUES ('persistence test');
+"
+
+# Supprimer le pod (le StatefulSet le recréera)
+kubectl delete pod postgresdb-0
+
+# Attendre le redémarrage
+kubectl wait --for=condition=ready pod -l app=postgresdb --timeout=120s
+
+# Vérifier que les données sont toujours là
+kubectl exec -it postgresdb-0 -- psql -U testUser -d testDB -c "SELECT * FROM test;"
+```
+
+## Prise de note sur l'install
 [Tuto](https://developer.hashicorp.com/terraform/tutorials/kubernetes/kubernetes-provider)
 - Installer kind et kubectl sur votre pc puis
 ```bash
@@ -37,34 +78,7 @@ nginx-example   NodePort    10.96.160.55   <none>        80:30201/TCP   14s
 
 On peux accéder à notre Nginx: `curl http://localhost:30201/`
 
-
-# Prise de notes
-## Quelques commandes
-
-Connexion à zzcluster
-
-```bash
-terraform init
-terraform plan
-terraform plan -var-file prod.tfvars
-terraform apply -auto-approve -var=speudo=lmx
-
-terraform init -upgrade
-terraform destroy
-
-terraform graph | dot -Tpng > graph.png
-```
-
-Fichiers:
-outputs.tf
-providers.tf
-variables.tf
-
-https://www.youtube.com/watch?v=BZ2TLtf3yFg 1h45
-https://search.opentofu.org/provider/cyrilgdn/postgresql/v1.25.0 postgresql
-https://www.youtube.com/watch?v=KcE4TirnUBc a voir
-
-## Fichié copié depuis le vidéo proj
+## Fichier copié depuis le vidéo proj
 
 ```t
 resource "google_compute_instance" "nginx" {
