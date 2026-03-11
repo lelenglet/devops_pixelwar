@@ -1,4 +1,9 @@
-# Tuto pour OpenTofu
+# Terraform
+## Prise en main
+- Télécharger votre openrc.sh depuis [https://193.49.167.10](https://193.49.167.10)
+- Renomer le openrc.sh, `chmod +x openrc.sh`
+
+## Prise de notes
 
 Connexion à zzcluster
 
