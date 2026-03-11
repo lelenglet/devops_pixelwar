@@ -9,7 +9,7 @@ spec:
     matchLabels:
       app: backend
       track: stable
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
@@ -17,10 +17,27 @@ spec:
         track: stable
     spec:
       containers:
-        - name: backend-app
-          image: "app-backend:v1"
-          imagePullPolicy: IfNotPresent
-          ports:
-            - name: http
-              containerPort: 80
+      - name: backend
+        image: app-backend:v1
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: DB_HOST
+            value: "postgresdb"
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: POSTGRES_DB
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: POSTGRES_USER
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: db-credentials
+                key: POSTGRES_PASSWORD
 ...
