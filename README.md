@@ -3,10 +3,12 @@
 ## Dockerfile
 
 Création des images :
-
+```
+cd frontend
 docker build -t app-frontend:v1 .
-
+cd ../backend
 docker build -t app-backend:v1 .
+```
 
 Tailles des images obtenues :
 
