@@ -38,6 +38,7 @@ kind load docker-image app-backend:v1 --name pixel-war
 ```
 
 Deploiement des manifests (le namespace doit être déployé en premier car il est utilisé par les autres fichiers) :
+(Cette étape est remplacé par la commande helm)
 
 ```bash
 kubectl apply -f kubernetes/namespace.yaml
