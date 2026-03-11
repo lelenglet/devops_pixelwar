@@ -3,8 +3,13 @@ apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
   extraPortMappings:
-  - containerPort: 30201
-    hostPort: 30201
+  # Frontend Pixel War (host 8080 -> nodePort 30080)
+  - containerPort: 30080
+    hostPort: 8080
+    listenAddress: "0.0.0.0"
+  # Backend Pixel War (host 3000 -> nodePort 30300)
+  - containerPort: 30300
+    hostPort: 3000
     listenAddress: "0.0.0.0"
 - role: worker
 - role: worker

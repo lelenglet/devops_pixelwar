@@ -69,12 +69,12 @@ output "namespace" {
   value       = "pixelwar"
 }
 
-output "port_forward_frontend" {
-  description = "Commande pour exposer le frontend en local"
-  value       = "kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar"
+output "frontend_url" {
+  description = "URL du frontend (port mappé automatiquement via Kind)"
+  value       = "http://localhost:8080"
 }
 
-output "port_forward_backend" {
-  description = "Commande pour exposer le backend en local"
-  value       = "kubectl port-forward svc/pixelwar-back-service 3000:3000 -n pixelwar"
+output "backend_url" {
+  description = "URL du backend (port mappé automatiquement via Kind)"
+  value       = "http://localhost:3000"
 }
