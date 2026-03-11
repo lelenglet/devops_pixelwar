@@ -1,0 +1,13 @@
+# Service Headless pour le StatefulSet PostgreSQL
+# Requis pour la résolution DNS des pods (postgresdb-0.postgresdb...)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresdb
+spec:
+  clusterIP: None
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgresdb
