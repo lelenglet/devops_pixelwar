@@ -20,15 +20,6 @@ provider "kubernetes" {
 
 locals {
   kubernetes_path = "${path.module}/../kubernetes"
-  # Applique le namespace "default" aux manifests qui n'en ont pas
-  with_namespace = { for k, v in {
-    db_secret       = file("${local.kubernetes_path}/db/db-secret.yaml")
-    db_svc          = file("${local.kubernetes_path}/db/db-svc.yaml")
-    db_stateful_set = file("${local.kubernetes_path}/db/db-stateful-set.yaml")
-  } : k => merge(
-    yamldecode(v),
-    { metadata = merge(lookup(yamldecode(v), "metadata", {}), { namespace = "default" }) }
-  ) }
 }
 
 ### Manifests Kubernetes (dossier kubernetes/) ────────────────────────────────
@@ -37,17 +28,17 @@ resource "kubernetes_manifest" "namespace" {
 }
 
 resource "kubernetes_manifest" "db_secret" {
-  manifest   = local.with_namespace["db_secret"]
+  manifest   = yamldecode(file("${local.kubernetes_path}/db/db-secret.yaml"))
   depends_on = [kubernetes_manifest.namespace]
 }
 
 resource "kubernetes_manifest" "db_svc" {
-  manifest   = local.with_namespace["db_svc"]
+  manifest   = yamldecode(file("${local.kubernetes_path}/db/db-svc.yaml"))
   depends_on = [kubernetes_manifest.namespace]
 }
 
 resource "kubernetes_manifest" "db_stateful_set" {
-  manifest   = local.with_namespace["db_stateful_set"]
+  manifest   = yamldecode(file("${local.kubernetes_path}/db/db-stateful-set.yaml"))
   depends_on = [kubernetes_manifest.db_secret, kubernetes_manifest.db_svc]
 }
 

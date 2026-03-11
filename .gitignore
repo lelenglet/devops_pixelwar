@@ -25,6 +25,7 @@ dist-ssr
 
 # Terraform
 terraform/.terraform
+terraform/.terraform.tfstate
 terraform/.terraform.lock.hcl
 terraform/.kube/config
 *openrc.sh
