@@ -24,7 +24,7 @@ Organisation en dossiers et séparation en fichiers :
 - Dossier frontend
 - Dossier backend
 
-Création du cluster avec kind :
+Création du cluster avec Kind (le fichier `kind-config.yaml` mappe automatiquement les ports 8080 et 3000 vers le frontend et le backend) :
 
 ```bash
 kind create cluster --name pixel-war --config kind-config.yaml
@@ -46,17 +46,10 @@ kubectl apply -f kubernetes/backend/
 kubectl apply -f kubernetes/frontend/
 ```
 
-Front accésible sur le [localhost:8080](http://localhost:8080/) avec la commande :
+Avec la config Kind (`kind-config.yaml`), les ports sont mappés automatiquement : pas besoin de `kubectl port-forward`.
 
-```bash
-kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar
-```
-
-Exposer le back :
-
-```bash
-kubectl port-forward svc/pixelwar-front-service 3000:3000 -n pixelwar
-```
+- **Frontend** : [http://localhost:8080](http://localhost:8080/)
+- **Backend** : http://localhost:3000
 
 
 ## Terraform
@@ -82,11 +75,14 @@ kubectl get all -n pixelwar
 
 ### Faire des requêtes
 
-**Frontend** (nécessite un port-forward) :
+**Frontend** (accessible directement) :
 ```bash
-kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar &
 curl http://localhost:8080/
-# Puis : kill %1  pour arrêter le port-forward
+```
+
+**Backend** (accessible directement) :
+```bash
+curl http://localhost:3000/
 ```
 
 **Base de données** (vérification) :
