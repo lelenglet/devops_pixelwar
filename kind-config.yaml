@@ -1,6 +1,3 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
@@ -9,3 +6,6 @@ nodes:
   - containerPort: 30201
     hostPort: 30201
     listenAddress: "0.0.0.0"
+- role: worker
+- role: worker
+
