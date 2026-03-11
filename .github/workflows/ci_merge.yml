@@ -3,7 +3,7 @@ name: CI-merge Pixel War
 on:
   push:
     branches:
-      - ci_cd
+      - main
 
 jobs:
   test:
