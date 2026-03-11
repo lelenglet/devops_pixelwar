@@ -55,7 +55,7 @@ kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar
 Exposer le back :
 
 ```bash
-kubectl port-forward svc/pixelwar-front-service 3000:3000 -n pixelwar
+kubectl port-forward svc/pixelwar-back-service 3000:3000 -n pixelwar
 ```
 
 
@@ -102,4 +102,13 @@ kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "SELE
 kind delete cluster --name pixel-war
 kubectl get all -n pixelwar 
 terraform state list
+```
+
+# Chart Helm
+
+Deploiement des manifests avec une seule commande, avec création du namespace :
+```
+helm upgrade --install pixelwar ./pixelwar-chart \
+  --namespace pixelwar \
+  --create-namespace
 ```
