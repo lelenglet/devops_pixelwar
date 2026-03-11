@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.database.host | quote }}
+  namespace: {{ .Values.namespace | default "default" | quote }}
+spec:
+  serviceName: {{ .Values.database.host | quote }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.database.host | quote }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.database.host | quote }}
+    spec:
+      containers:
+        - name: postgresdb
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.database.port }}
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.database.secretName }}
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - mountPath: {{ .Values.postgresql.persistence.mountPath }}
+              name: pgdata
+              subPath: {{ .Values.postgresql.persistence.subPath }}
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: [ {{ .Values.postgresql.persistence.accessMode | quote }} ]
+        resources:
+          requests:
+            storage: {{ .Values.postgresql.persistence.size | quote }}

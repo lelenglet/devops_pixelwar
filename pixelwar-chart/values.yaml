@@ -1,0 +1,52 @@
+namespace: pixelwar
+
+replicaCount: 1
+
+image:
+  repository: app-backend
+  tag: v1
+  pullPolicy: IfNotPresent
+
+database:
+  host: "postgresdb"
+  port: "5432"
+  secretName: db-credentials
+  auth:
+    dbName: "testDB"
+    user: "testUser"
+    password: "testPassword"
+  secretName: db-credential
+
+postgresql:
+  image:
+    repository: postgres
+    tag: "15-alpine"
+  persistence:
+    size: 5Gi
+    accessMode: ReadWriteOnce
+    mountPath: /var/lib/postgresql/data
+    subPath: postgres
+
+labels:
+  app: backend
+  track: stable
+
+service:
+  type: NodePort
+  port: 3000
+  targetPort: 3000
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: app-frontend
+    tag: v1
+    pullPolicy: IfNotPresent
+  labels:
+    app: frontend
+    track: stable
+  service:
+    type: LoadBalancer
+    port: 80
+    targetPort: 80
+  
