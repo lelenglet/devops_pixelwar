@@ -1,0 +1,9 @@
+# Provisionnement dynamique du volume
+volumeClaimTemplates:
+- metadata:
+    name: pgdata
+  spec:
+    accessModes: [ "ReadWriteOnce" ]
+    resources:
+      requests:
+        storage: 5Gi
