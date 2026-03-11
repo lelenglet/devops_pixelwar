@@ -53,6 +53,9 @@ jobs:
           kubectl apply -f kubernetes/db/
           kubectl apply -f kubernetes/backend/
           kubectl apply -f kubernetes/frontend/
+      - name: Wait for pods
+        run: |
+          kubectl wait --for=condition=ready pod --all -n pixelwar --timeout=60s
       - name: Manifest display
         run: |
-          kubectl get all -n pixel-war
+          kubectl get all -n pixelwar
