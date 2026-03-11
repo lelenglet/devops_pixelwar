@@ -35,8 +35,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Docker images creation
         run: |
-          docker build -t app-frontend:v1 .
+          cd backend
           docker build -t app-backend:v1 .
+          cd ../frontend
+          docker build -t app-frontend:v1 .
+
       - name: Cluster kind creation
         run: |
           kind create cluster --name pixel-war --config kind-config.yaml
@@ -50,6 +53,6 @@ jobs:
           kubectl apply -f kubernetes/db/
           kubectl apply -f kubernetes/backend/
           kubectl apply -f kubernetes/frontend/
-      - name: Manifest display 
+      - name: Manifest display
         run: |
           kubectl get all -n pixel-war
