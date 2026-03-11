@@ -1,29 +1,53 @@
-const express = require('express');
-const cors = require('cors');
+import express from 'express';
+import cors from 'cors';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*", // Allow your frontend to connect
+    methods: ["GET", "POST"]
+  }
+});
+
 const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
 
-// Simulation d'une grille de 10x10
-let grid = Array(10).fill(null).map(() => Array(10).fill("#FFFFFF"));
+// 10x10 Grid (Matches your frontend logic)
+let grid = {}; 
 
-// Route pour récupérer la grille
-app.get('/api/grid', (req, res) => {
-    res.json(grid);
+// Initializing a simple grid object
+for (let x = 0; x < 10; x++) {
+  for (let y = 0; y < 10; y++) {
+    grid[`${x}:${y}`] = "#FFFFFF";
+  }
+}
+
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  // Send the full grid to the new user
+  socket.emit("grid:init", grid);
+
+  // Handle pixel updates
+  socket.on("pixel:set", ({ x, y, color }) => {
+    grid[`${x}:${y}`] = color;
+    // Broadcast the change to EVERYONE (including the sender)
+    io.emit("pixel:update", { x, y, color });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
 });
 
-// Route pour modifier un pixel
-app.post('/api/pixel', (req, res) => {
-    const { x, y, color } = req.body;
-    if (x >= 0 && x < 10 && y >= 0 && y < 10) {
-        grid[y][x] = color;
-        return res.status(200).json({ message: "Pixel mis à jour !" });
-    }
-    res.status(400).json({ error: "Coordonnées invalides" });
-});
+// Health check for Kubernetes
+app.get('/health', (req, res) => res.send('OK'));
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Backend Pixel War lancé sur le port ${PORT}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Backend running on port ${PORT}`);
 });

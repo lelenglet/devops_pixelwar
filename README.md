@@ -4,9 +4,10 @@
 
 Création des images :
 
-docker build -t app-frontend:v1 .
-
-docker build -t app-backend:v1 .
+```bash
+docker build -t app-frontend:v1 frontend/
+docker build -t app-backend:v1 backend/
+```
 
 Tailles des images obtenues :
 
@@ -27,23 +28,35 @@ kubectl apply -f kubernetes/ --recursive
 ```
 
 Création du cluster avec kind :
-```
+
+```bash
 kind create cluster --name pixel-war --config kind-config.yaml
 ```
 
 Chargement des images :
 
+```bash
 kind load docker-image app-frontend:v1 --name pixel-war
 kind load docker-image app-backend:v1 --name pixel-war
+```
 
 Deploiement des manifests (le namespace doit être déployé en premier car il est utilisé par les autres fichiers) :
 
+```bash
 kubectl apply -f kubernetes/namespace.yaml
 kubectl apply -f kubernetes/db/
 kubectl apply -f kubernetes/backend/
 kubectl apply -f kubernetes/frontend/
+```
 
 Front accésible sur le localhost:8080 avec la commande :
-```
+
+```bash
 kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar
+```
+
+Exposer le back :
+
+```bash
+kubectl port-forward svc/pixelwar-front-service 3000:3000 -n pixelwar
 ```
