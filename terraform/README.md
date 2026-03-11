@@ -8,7 +8,13 @@ source openrc.sh   # ou: . openrc.sh  (requis pour exporter OS_* vers terraform)
 
 terraform init
 terraform plan
+terraform apply
 ```
+
+# Tuto
+[Tuto](https://developer.hashicorp.com/terraform/tutorials/kubernetes/kubernetes-provider)
+
+
 
 # Prise de notes
 ## Quelques commandes
