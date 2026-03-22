@@ -3,7 +3,7 @@ name: CI-merge Pixel War
 on:
   push:
     branches:
-      - ci_cd
+      - main
 
 jobs:
   test:
@@ -36,8 +36,14 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - name: Launch helm
+      - name: Helm
         run: |
           helm upgrade --install pixelwar ./pixelwar-chart \
           --namespace pixelwar \
           --create-namespace
+      - name: Front accessible sur localhost:8080
+        run: |
+          kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar
+      - name: Exposition du back  
+        run: |
+          kubectl port-forward svc/pixelwar-back-service 3000:3000 -n pixelwar
