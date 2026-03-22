@@ -3,7 +3,7 @@ name: CI-merge Pixel War
 on:
   push:
     branches:
-      - main
+      - ci_cd
 
 jobs:
   test:
@@ -36,29 +36,8 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - name: Docker images creation
+      - name: Launch helm
         run: |
-          cd backend
-          docker build -t app-backend:v1 .
-          cd ../frontend
-          docker build -t app-frontend:v1 .
-
-      - name: Cluster kind creation
-        run: |
-          kind create cluster --name pixel-war --config kind-config.yaml
-      - name: Loading app images
-        run: |
-          kind load docker-image app-frontend:v1 --name pixel-war
-          kind load docker-image app-backend:v1 --name pixel-war
-      - name: Manifest deployement
-        run: |
-          kubectl apply -f kubernetes/namespace.yaml
-          kubectl apply -f kubernetes/db/
-          kubectl apply -f kubernetes/backend/
-          kubectl apply -f kubernetes/frontend/
-      - name: Wait for pods
-        run: |
-          kubectl wait --for=condition=ready pod --all -n pixelwar --timeout=60s
-      - name: Manifest display
-        run: |
-          kubectl get all -n pixelwar
+          helm upgrade --install pixelwar ./pixelwar-chart \
+          --namespace pixelwar \
+          --create-namespace
