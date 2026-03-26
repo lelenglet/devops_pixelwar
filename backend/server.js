@@ -9,6 +9,16 @@ const httpServer = createServer(app);
 const collectDefaultMetrics = client.collectDefaultMetrics;
 collectDefaultMetrics(); // Capture CPU, RAM automatiquement
 
+const connectedUsersGauge = new client.Gauge({
+  name: 'pixelwar_connected_users',
+  help: 'Number of currently connected users'
+});
+
+const totalPaintedCounter = new client.Counter({
+  name: 'pixelwar_pixels_painted_total',
+  help: 'Total number of pixels painted since server start'
+});
+
 const io = new Server(httpServer, {
   cors: {
     origin: "*", // Allow your frontend to connect
@@ -32,6 +42,7 @@ for (let x = 0; x < 10; x++) {
 }
 
 io.on("connection", (socket) => {
+  connectedUsersGauge.inc();
   console.log("Client connected:", socket.id);
 
   // Send the full grid to the new user
@@ -42,17 +53,20 @@ io.on("connection", (socket) => {
     grid[`${x}:${y}`] = color;
     // Broadcast the change to EVERYONE (including the sender)
     io.emit("pixel:update", { x, y, color });
+
+    totalPaintedCounter.inc()
   });
 
   socket.on("disconnect", () => {
+    connectedUsersGauge.dec();
     console.log("Client disconnected");
   });
 });
 
 // Health check for Kubernetes
-app.get('/health', (req, res) => res.send('OK'));
+app.get('/health', (_, res) => res.send('OK'));
 
-app.get('/metrics', async (req, res) => {
+app.get('/metrics', async (_, res) => {
   res.set('Content-Type', client.register.contentType);
   res.end(await client.register.metrics());
 });
