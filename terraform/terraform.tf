@@ -41,6 +41,16 @@ resource "kubernetes_manifest" "db_stateful_set" {
   depends_on = [kubernetes_manifest.db_secret, kubernetes_manifest.db_svc]
 }
 
+resource "kubernetes_manifest" "redis_deployment" {
+  manifest   = yamldecode(file("${local.kubernetes_path}/redis/redis-deployment.yaml"))
+  depends_on = [kubernetes_manifest.namespace]
+}
+
+resource "kubernetes_manifest" "redis_svc" {
+  manifest   = yamldecode(file("${local.kubernetes_path}/redis/redis-service.yaml"))
+  depends_on = [kubernetes_manifest.redis_deployment]
+}
+
 ### Backend ─────────────────────────────────────────────────────────────────────
 resource "kubernetes_manifest" "backend_deployment" {
   manifest   = yamldecode(file("${local.kubernetes_path}/backend/backend-deployment.yml"))
@@ -61,6 +71,13 @@ resource "kubernetes_manifest" "frontend_deployment" {
 resource "kubernetes_manifest" "frontend_service" {
   manifest   = yamldecode(file("${local.kubernetes_path}/frontend/frontend-service.yml"))
   depends_on = [kubernetes_manifest.namespace, kubernetes_manifest.frontend_deployment]
+}
+
+### Monitoring ────────────────────────────────────────────────────────────────────
+
+resource "kubernetes_manifest" "backend_servicemonitor" {
+  manifest = yamldecode(file("${local.kubernetes_path}/backend/service-monitor.yml"))
+  depends_on = [kubernetes_manifest.backend_service]
 }
 
 ### Outputs ───────────────────────────────────────────────────────────────────

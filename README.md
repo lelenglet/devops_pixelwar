@@ -95,6 +95,30 @@ curl http://localhost:8080/
 kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "SELECT 1;"
 ```
 
+### Observabilité
+
+Si on n'a pas encore le helm prometheus et grafana -> récupère et installe dans le namespace monitoring
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --create-namespace
+
+kubectl --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 -d ; echo #Recupere le mot de passe
+export POD_NAME=$(kubectl --namespace monitoring get pod -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=monitoring" -oname)
+```
+
+Expose grafana sur le port 9000
+
+```bash
+kubectl port-forward -n monitoring $POD_NAME 9000:80 &
+```
+
+username: admin
+password: le mot de passe envoyé précédemment
+
 # Mémo
 ```bash
 kind delete cluster --name pixel-war

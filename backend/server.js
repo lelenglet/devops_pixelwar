@@ -2,9 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import client from 'prom-client';
 
 const app = express();
 const httpServer = createServer(app);
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics(); // Capture CPU, RAM automatiquement
+
 const io = new Server(httpServer, {
   cors: {
     origin: "*", // Allow your frontend to connect
@@ -12,7 +16,7 @@ const io = new Server(httpServer, {
   }
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
@@ -47,6 +51,11 @@ io.on("connection", (socket) => {
 
 // Health check for Kubernetes
 app.get('/health', (req, res) => res.send('OK'));
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
 
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${PORT}`);

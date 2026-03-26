@@ -1,3 +1,3 @@
 export const config = {
-  socketUrl: "http://localhost:3000"
+  socketUrl: window.location.origin
 };

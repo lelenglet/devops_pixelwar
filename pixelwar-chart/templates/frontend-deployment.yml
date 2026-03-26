@@ -23,3 +23,6 @@ spec:
             preStop:
               exec:
                 command: ["/usr/sbin/nginx", "-s", "quit"]
+          env:
+            - name: VITE_SOCKET_URL
+              value: {{ .Values.frontend.env.vite }}

@@ -7,19 +7,25 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Values.labels.app }}
-      track: {{ .Values.labels.track }}
+      app: {{ .Values.backend.labels.app }}
+      track: {{ .Values.backend.labels.track }}
   template:
     metadata:
       labels:
-        app: {{ .Values.labels.app }}
-        track: {{ .Values.labels.track }}
+        app: {{ .Values.backend.labels.app }}
+        track: {{ .Values.backend.labels.track }}
     spec:
       containers:
-      - name: {{ .Values.labels.app }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+      - name: {{ .Values.backend.labels.app }}
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
         env:
+          - name: PORT
+            value: {{ .Values.backend.env.port }}
+          - name: REDIS_URL
+            value: {{ .Values.backend.env.redis }}
+          - name: POSTGRES_URL
+            value: {{ .Values.backend.env.postgres }}
           - name: DB_HOST
             value: {{ .Values.database.host | quote }}
           - name: DB_PORT
