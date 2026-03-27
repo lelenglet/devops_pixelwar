@@ -34,7 +34,7 @@ service:
 backend:
   replicaCount: 1
   image:
-    repository: app-backend
+    repository: ghcr.io/lelenglet/devops_pixelwar-backend
     tag: latest
     pullPolicy: IfNotPresent
   labels:
@@ -48,7 +48,7 @@ backend:
 frontend:
   replicaCount: 1
   image:
-    repository: app-frontend
+    repository: ghcr.io/lelenglet/devops_pixelwar-frontend
     tag: latest
     pullPolicy: IfNotPresent
   labels:

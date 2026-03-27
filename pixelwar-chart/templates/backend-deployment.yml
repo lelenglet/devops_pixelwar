@@ -39,3 +39,5 @@ spec:
               secretKeyRef:
                 name: {{ .Values.database.secretName }}
                 key: POSTGRES_PASSWORD
+      imagePullSecrets:
+      - name: ghcr-secret

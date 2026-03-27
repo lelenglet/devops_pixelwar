@@ -111,6 +111,15 @@ Récupérer le mot de passe d'accès à argoCD pour id = admin
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
 ```
 
+secret pour recup les pods sur argoCD
+```
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=lelenglet \
+  --docker-password=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 \
+  --namespace=pixelwar
+```
+
 ## Tester l'infra
 
 ### Vérifier Terraform
