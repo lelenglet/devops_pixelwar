@@ -1,11 +1,11 @@
-name: CI/CD Pixel War - Production
+name: CI MERGE/CD Pixel War - Production
 
 on:
   push:
     branches:
       - argocd
-        prometheus
-        master
+      - prometheus
+      - master
 
 env:
   REGISTRY: ghcr.io
