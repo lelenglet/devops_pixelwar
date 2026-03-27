@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - argocd
-      
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME_BACK: ${{ github.repository }}-backend
@@ -35,7 +35,6 @@ jobs:
           cd frontend
           npm ci
           npm test || echo "Pas de tests définis, on continue"
-
 
   build-and-push:
     needs: test
@@ -73,26 +72,3 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONT }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONT }}:${{ github.sha }}
 
-  update-manifests:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update image tags in values.yaml
-        run: |
-          # Mise à jour précise des tags pour le backend et le frontend
-          # Utilise le SHA du commit pour garantir l'unicité et le déploiement ArgoCD
-          sed -i "/backend:/,/tag:/ s/tag: .*/tag: \"${{ github.sha }}\"/" pixelwar-chart/values.yaml
-          sed -i "/frontend:/,/tag:/ s/tag: .*/tag: \"${{ github.sha }}\"/" pixelwar-chart/values.yaml
-
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "lelenglet[bot]"
-          git config --global user.email "lelenglet[bot]@gmail.com"
-          git add pixelwar-chart/values.yaml
-          git commit -m "chore: update images tag to ${{ github.sha }} [skip ci]"
-          git push
