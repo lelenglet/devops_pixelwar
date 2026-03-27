@@ -36,7 +36,7 @@ backend:
   image:
     repository: ghcr.io/lelenglet/devops_pixelwar-backend
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   labels:
     app: backend
     track: stable
@@ -50,7 +50,7 @@ frontend:
   image:
     repository: ghcr.io/lelenglet/devops_pixelwar-frontend
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always 
   labels:
     app: frontend
     track: stable
