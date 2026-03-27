@@ -1,9 +1,14 @@
-name: CI-merge Pixel War
+name: CI/CD Pixel War - Production
 
 on:
   push:
     branches:
-      - main
+      - argocd
+      
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACK: ${{ github.repository }}-backend
+  IMAGE_NAME_FRONT: ${{ github.repository }}-frontend
 
 jobs:
   test:
@@ -31,19 +36,63 @@ jobs:
           npm ci
           npm test || echo "Pas de tests définis, on continue"
 
-  update-gitops:
-    runs-on: ubuntu-latest
+
+  build-and-push:
     needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Update Image Tag
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACK }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACK }}:${{ github.sha }}
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONT }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONT }}:${{ github.sha }}
+
+  update-manifests:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update image tags in values.yaml
         run: |
-          sed -i "s/tag: v1/tag: ${{ github.sha }}/g" pixelwar-chart/values.yaml
-          
-      - name: Commit & Push
+          # Mise à jour précise des tags pour le backend et le frontend
+          # Utilise le SHA du commit pour garantir l'unicité et le déploiement ArgoCD
+          sed -i "/backend:/,/tag:/ s/tag: .*/tag: \"${{ github.sha }}\"/" pixelwar-chart/values.yaml
+          sed -i "/frontend:/,/tag:/ s/tag: .*/tag: \"${{ github.sha }}\"/" pixelwar-chart/values.yaml
+
+      - name: Commit and push changes
         run: |
-          git config --global user.name "Actions Bot"
-          git config --global user.email "bot@isima.fr"
+          git config --global user.name "lelenglet[bot]"
+          git config --global user.email "lelenglet[bot]@gmail.com"
           git add pixelwar-chart/values.yaml
-          git commit -m "deploy: update image to ${{ github.sha }}"
+          git commit -m "chore: update images tag to ${{ github.sha }} [skip ci]"
           git push
