@@ -1,124 +1,67 @@
 # Terraform
+
+Le déploiement utilise le **provider Helm** et le chart local `../pixelwar-chart`, comme `run.sh` (`helm upgrade --install`). Il n’y a plus de manifests YAML sous `kubernetes/` : une seule source, le chart Helm.
+
+## Prérequis
+
+- Cluster Kubernetes joignable (ex. `kind create cluster --name pixel-war --config ../kind-config.yaml` à la racine du dépôt).
+- Images Docker chargées dans kind si vous utilisez des tags locaux (`kind load docker-image …`), comme pour `run.sh`.
+- `kubectl` / `helm` disponibles ; le contexte par défaut attendu est `kind-pixel-war` (voir `variables.tf`).
+
 ## Prise en main
+
 ```bash
+cd terraform
 terraform init
 terraform plan
 terraform apply
 ```
+
+Variables utiles (fichier optionnel `terraform.tfvars`) :
+
+- `kube_config_path`, `kube_config_context` — accès au cluster.
+- `helm_release_name`, `helm_namespace` — alignés sur `run.sh` (`pixelwar` / `pixelwar`).
+- `helm_timeout_seconds` — timeout d’attente Helm (défaut `900`, soit 15 minutes).
 
 ## Vérifier que tout va bien
+
 ```bash
-# Le plan doit indiquer qu'aucun changement n'est nécessaire
 terraform plan
-# Attendu : "No changes. Your infrastructure matches the configuration."
+# Attendu : "No changes" une fois l’état à jour.
 
-# Lister les ressources gérées par Terraform
 terraform state list
+# Attendu : helm_release.pixelwar
 
-# En cas d'erreur "context does not exist" : vérifier le contexte disponible
+terraform output
 kubectl config get-contexts
-# Puis définir kube_config_context dans terraform.tfvars si nécessaire
 ```
 
-# Tuto
+En cas d’erreur « context does not exist », ajuster `kube_config_context` dans `terraform.tfvars` après `kubectl config get-contexts`.
 
-## Tester l'infra
+## Migration depuis l’ancien provider Kubernetes (manifests)
+
+Si un ancien état référençait `kubernetes_manifest.*` et des fichiers sous `kubernetes/`, supprimer ces ressources de l’état ou repartir d’un état propre :
+
 ```bash
-terraform init
-terraform apply
-# ─── Vérifier les ressources ───
-# Namespace
-kubectl get namespace pixelwar
+cd terraform
+terraform state list
+# Pour chaque ancienne ressource kubernetes_manifest.* :
+# terraform state rm 'kubernetes_manifest.namespace'
+# … puis terraform init && terraform plan && terraform apply
+```
 
-# Ressources de la base (namespace pixelwar)
+Ou, en environnement jetable : `rm -f terraform.tfstate terraform.tfstate.backup` puis `terraform init` et `terraform apply` (à n’utiliser que si vous acceptez de perdre l’historique d’état).
+
+## Tester l’infra (après apply)
+
+```bash
+kubectl get namespace pixelwar
 kubectl get secret db-credentials -n pixelwar
 kubectl get svc postgresdb -n pixelwar
 kubectl get statefulset postgresdb -n pixelwar
-
-NAME             TYPE     DATA   AGE
-db-credentials   Opaque   3      111s
-NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
-postgresdb   ClusterIP   None         <none>        5432/TCP   111s
-NAME         READY   AGE
-postgresdb   1/1     111s
-
-# Statut des pods
 kubectl get pods -l app=postgresdb -n pixelwar
 
-# ─── Tester la BDD ───
 kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "SELECT 1;"
-
-
-# ─── Tester la persistance de la BDD ───
-# Créer une table de test
-kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "
-  CREATE TABLE IF NOT EXISTS test (id SERIAL PRIMARY KEY, value TEXT);
-  INSERT INTO test (value) VALUES ('persistence test');
-"
-
-# Supprimer le pod (le StatefulSet le recréera)
-kubectl delete pod postgresdb-0 -n pixelwar
-
-# Attendre le redémarrage
-kubectl wait --for=condition=ready pod -l app=postgresdb -n pixelwar --timeout=120s
-
-# Vérifier que les données sont toujours là
-kubectl exec -it postgresdb-0 -n pixelwar -- psql -U testUser -d testDB -c "SELECT * FROM test;"
 ```
 
-## Prise de note sur l'install
-[Tuto](https://developer.hashicorp.com/terraform/tutorials/kubernetes/kubernetes-provider)
-- Installer kind et kubectl sur votre pc puis
-```bash
-curl https://raw.githubusercontent.com/hashicorp/learn-terraform-deploy-nginx-kubernetes-provider/main/kind-config.yaml --output kind-config.yaml
-kind create cluster --name terraform-learn --config kind-config.yaml
-
-kind get clusters
-kubectl cluster-info --context kind-terraform-learn
-```
-
-On va ensuite mettre à jour les variables de `terraform.tfvars` avec les valeurs de
-```bash
-kubectl config view --minify --flatten --context=kind-terraform-learn
-```
-
-On va lister nos instances:
-```bash
-kubectl get services
-NAME            TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
-kubernetes      ClusterIP   10.96.0.1      <none>        443/TCP        21m
-nginx-example   NodePort    10.96.160.55   <none>        80:30201/TCP   14s
-```
-
-On peux accéder à notre Nginx: `curl http://localhost:30201/`
-
-## Fichier copié depuis le vidéo proj
-
-```t
-resource "google_compute_instance" "nginx" {
-    for_each = var.config.cloud.workload
-
-    machine_type = each.value.machine_typename = "nginx-${each.key}"
-    zone = "${each.value.region}-b"
-
-    boot_disk {
-        initialize_params {
-            image = "debian-cloud/debian-12"
-        }
-    }
-
-    network_interface {
-        network = "default"
-        access_config {}
-    }
-
-    tags = ["public"]
-
-    metadata_startup_script = <<-EOF
-        #!/bin/bash
-        apt-get update
-        apt-get install -y nginx
-        echo " <!DOCTYOE html> <html lang="fr"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=dev....">"
-
-}
-```
+Références : [Terraform Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs).
