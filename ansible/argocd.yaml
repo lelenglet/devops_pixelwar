@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: 'https://github.com/lelenglet/devops_pixelwar.git'
-    targetRevision: argocd
+    targetRevision: prometheus
     path: pixelwar-chart   
   destination:
     server: 'https://kubernetes.default.svc'
