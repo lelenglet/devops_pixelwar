@@ -18,7 +18,7 @@ spec:
       containers:
       - name: {{ .Values.backend.labels.app }}
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
         env:
           - name: DB_HOST
             value: {{ .Values.database.host | quote }}
