@@ -28,6 +28,8 @@ dist-ssr
 *.tfstate.backup
 terraform/.terraform
 terraform/.terraform.tfstate
-terraform/.terraform.lock.hcl
 terraform/.kube/config
 *openrc.sh
+
+# État local des scripts run.sh / stop.sh (PID port-forward)
+.pixelwar/

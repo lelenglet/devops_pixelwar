@@ -1,0 +1,39 @@
+---
+# Déploiement du chart Helm (équivalent à run.sh sans build Docker / kind load).
+# Depuis le dossier ansible/ : ansible-playbook playbooks/deploy.yml
+- name: Déployer Pixel War via Helm
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    repo_root: "{{ playbook_dir | dirname | dirname }}"
+    chart_path: "{{ repo_root }}/pixelwar-chart"
+
+  tasks:
+    - name: Vérifier que le chart est présent
+      ansible.builtin.stat:
+        path: "{{ chart_path }}/Chart.yaml"
+      register: chart_dir
+      failed_when: not chart_dir.stat.exists
+
+    - name: Installer / mettre à jour le release Helm
+      ansible.builtin.command:
+        argv:
+          - helm
+          - upgrade
+          - --install
+          - "{{ helm_release_name }}"
+          - "{{ chart_path }}"
+          - --namespace
+          - "{{ k8s_namespace }}"
+          - --create-namespace
+          - --kubeconfig
+          - "{{ kubeconfig_path }}"
+          - --kube-context
+          - "{{ kube_context }}"
+          - --wait
+          - --timeout
+          - 15m
+          - -f
+          - "{{ chart_path }}/values.yaml"
