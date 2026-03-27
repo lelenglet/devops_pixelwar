@@ -36,7 +36,7 @@ backend:
   image:
     repository: app-backend
     tag: latest
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   labels:
     app: backend
     track: stable
@@ -50,7 +50,7 @@ frontend:
   image:
     repository: app-frontend
     tag: latest
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   labels:
     app: frontend
     track: stable
