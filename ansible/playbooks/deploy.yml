@@ -17,23 +17,19 @@
       register: chart_dir
       failed_when: not chart_dir.stat.exists
 
-    - name: Installer / mettre à jour le release Helm
-      ansible.builtin.command:
-        argv:
-          - helm
-          - upgrade
-          - --install
-          - "{{ helm_release_name }}"
-          - "{{ chart_path }}"
-          - --namespace
-          - "{{ k8s_namespace }}"
-          - --create-namespace
-          - --kubeconfig
-          - "{{ kubeconfig_path }}"
-          - --kube-context
-          - "{{ kube_context }}"
-          - --wait
-          - --timeout
-          - 15m
-          - -f
-          - "{{ chart_path }}/values.yaml"
+    - name: Create ArgoCD Namespace
+      kubernetes.core.k8s:
+        name: argocd
+        kind: Namespace
+        state: present
+
+    - name: Install ArgoCD
+      kubernetes.core.k8s:
+        namespace: argocd
+        src: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+        state: present
+
+    - name: Déployer l'application Pixel War via ArgoCD
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ playbook_dir }}/../argocd.yaml"

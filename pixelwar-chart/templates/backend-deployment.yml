@@ -16,8 +16,8 @@ spec:
         track: {{ .Values.labels.track }}
     spec:
       containers:
-      - name: {{ .Values.labels.app }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+      - name: {{ .Values.backend.labels.app }}
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
           - name: DB_HOST

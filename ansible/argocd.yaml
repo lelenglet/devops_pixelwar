@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pixelwar-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/lelenglet/devops_pixelwar.git'
+    targetRevision: argocd
+    path: pixelwar-chart   
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: pixelwar
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

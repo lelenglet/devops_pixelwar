@@ -2,11 +2,6 @@ namespace: pixelwar
 
 replicaCount: 1
 
-image:
-  repository: app-backend
-  tag: v1
-  pullPolicy: IfNotPresent
-
 database:
   host: "postgresdb"
   port: "5432"
@@ -36,12 +31,26 @@ service:
   port: 3000
   targetPort: 3000
 
+backend:
+  replicaCount: 1
+  image:
+    repository: app-backend
+    tag: latest
+    pullPolicy: Always
+  labels:
+    app: backend
+    track: stable
+  service:
+    type: NodePort
+    port: 3000
+    targetPort: 3000
+
 frontend:
   replicaCount: 1
   image:
     repository: app-frontend
-    tag: v1
-    pullPolicy: IfNotPresent
+    tag: latest
+    pullPolicy: Always
   labels:
     app: frontend
     track: stable
