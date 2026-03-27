@@ -22,14 +22,14 @@ postgresql:
 frontend:
   replicaCount: 1
   image:
-    repository: app-frontend
-    tag: v1
-    pullPolicy: IfNotPresent
+    repository: ghcr.io/lelenglet/devops_pixelwar-frontend
+    tag: latest
+    pullPolicy: Always 
   labels:
     app: frontend
     track: stable
   service:
-    type: LoadBalancer
+    type: ClusterIP
     port: 80
     targetPort: 80
   env:
@@ -38,9 +38,9 @@ frontend:
 backend:
   replicaCount: 1
   image:
-    repository: app-backend
-    tag: v1
-    pullPolicy: IfNotPresent
+    repository: ghcr.io/lelenglet/devops_pixelwar-backend
+    tag: latest
+    pullPolicy: Always
   labels:
     app: backend
     track: stable

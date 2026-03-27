@@ -1,0 +1,6 @@
+---
+# Aligné sur run.sh / terraform
+helm_release_name: pixelwar
+k8s_namespace: pixelwar
+kube_context: kind-pixel-war
+kubeconfig_path: "{{ lookup('env', 'HOME') }}/.kube/config"

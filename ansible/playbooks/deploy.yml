@@ -1,0 +1,35 @@
+---
+# Déploiement du chart Helm (équivalent à run.sh sans build Docker / kind load).
+# Depuis le dossier ansible/ : ansible-playbook playbooks/deploy.yml
+- name: Déployer Pixel War via Helm
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    repo_root: "{{ playbook_dir | dirname | dirname }}"
+    chart_path: "{{ repo_root }}/pixelwar-chart"
+
+  tasks:
+    - name: Vérifier que le chart est présent
+      ansible.builtin.stat:
+        path: "{{ chart_path }}/Chart.yaml"
+      register: chart_dir
+      failed_when: not chart_dir.stat.exists
+
+    - name: Create ArgoCD Namespace
+      kubernetes.core.k8s:
+        name: argocd
+        kind: Namespace
+        state: present
+
+    - name: Install ArgoCD
+      kubernetes.core.k8s:
+        namespace: argocd
+        src: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+        state: present
+
+    - name: Déployer l'application Pixel War via ArgoCD
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ playbook_dir }}/../argocd.yaml"

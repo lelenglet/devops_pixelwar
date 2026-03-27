@@ -44,9 +44,9 @@ Tailles des images obtenues :
 - Frontend : 92MB
 - Backend : 207MB
 
-Les images sont relativement optimisées notamment grâce à un découpage des fichiers Dockerfile en plusieurs stages et un choix statégique dans l'ordre des commandes.
+Les images sont relativement optimisées notamment grâce à un découpage des fichiers Dockerfile en plusieurs stages et un choix stratégique dans l'ordre des commandes.
 
-## Kubernetes
+### Kubernetes
 
 Organisation en dossiers et séparation en fichiers :
 
@@ -54,42 +54,56 @@ Organisation en dossiers et séparation en fichiers :
 - Dossier frontend
 - Dossier backend
 
-Création du cluster avec kind :
+Création du cluster avec kind puis chargement des images
 
 ```bash
 kind create cluster --name pixel-war --config kind-config.yaml
-```
-
-Chargement des images :
-
-```bash
 kind load docker-image app-frontend:v1 --name pixel-war
 kind load docker-image app-backend:v1 --name pixel-war
 ```
 
-Deploiement des manifests (le namespace doit être déployé en premier car il est utilisé par les autres fichiers) :
-(Cette étape est remplacé par la commande helm)
+## Déploiement
 
-```bash
-kubectl apply -f kubernetes/namespace.yaml
-kubectl apply -f kubernetes/db/
-kubectl apply -f kubernetes/backend/
-kubectl apply -f kubernetes/frontend/
-```
+Plusieurs manières de déployer la solution :
 
-Front accésible sur le [localhost:8080](http://localhost:8080/) avec la commande :
+| Outil              | Rôle                                                                                                                             |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Helm (à la racine) | Déploiement direct du chart sur un cluster déjà là et déjà ciblé par ton contexte kubectl.                                       |
+| `./run.sh`         | Tout-en-un local : cluster kind + build images + chargement dans kind + Helm. Pratique pour dev.                                 |
+| Terraform          | Infra déclarative : applique le chart (et ce que le code Terraform gère) ; utile si tu veux gérer le déploiement avec Terraform. |
+| Ansible            | Automatisation / playbook : appelle Helm en CLI ; utile si ton flux passe par Ansible                                            |
+
+Après avoir déployé la solution il faut rediriger les ports avec :
 
 ```bash
 kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar
-```
-
-Exposer le back :
-
-```bash
 kubectl port-forward svc/pixelwar-back-service 3000:3000 -n pixelwar
 ```
 
-## Terraform
+Vous pouvez ensuite vous connecter sur [localhost:8080](http://localhost:8080/).
+
+### Helm
+
+```bash
+helm upgrade --install pixelwar ./pixelwar-chart \
+  --namespace pixelwar \
+  --create-namespace \
+  --kube-context kind-pixel-war
+```
+
+### `./run.sh`
+
+Script idempotent pour lancer et stopper l'infra.
+
+```bash
+./run.sh
+./run.sh --skip-build   # réutiliser les images déjà construites
+./run.sh --forward      # port-forwards 8080 (front) et 3000 (back) en arrière-plan
+```
+
+### Terraform
+
+Déploie le même chart qu'avec `helm`
 
 ```bash
 cd terraform
@@ -98,9 +112,42 @@ terraform plan
 terraform apply
 ```
 
-Si vous obtenez une erreur `Cannot create resource that already exists`, vous pouvez tout supprimer avec `kubectl delete namespace pixelwar`
+Si vous obtenez une erreur `Cannot create resource that already exists`, vous pouvez la supprimer pour la recréer depuis terraform avec `kubectl delete namespace pixelwar`
 
-Si vous avez ensuite l'erreur `kind create cluster --name pixel-war --config kind-config.yaml`, vous pouvez `cd ..; kind create cluster --name pixel-war --config kind-config.yaml`
+### Ansible
+
+Déploie le même chart qu'avec `helm`
+
+```bash
+cd ansible
+ansible-playbook playbooks/deploy.yml
+```
+
+Il faut attendre quelques secondes pour que les services se lancent et que le front puisse accéder à l'API.
+
+### ArgoCD
+
+Port-forward argoCD sur localhost
+
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+Récupérer le mot de passe d'accès à argoCD pour id = admin
+
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
+```
+
+secret pour recup les pods sur argoCD
+
+```bash
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=EvanC2611 \
+  --docker-password=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 \
+  --namespace=pixelwar
+```
 
 ## Tester l'infra
 
@@ -158,7 +205,7 @@ On peut notamment visualiser: pixelwar_connected_users et pixelwar_pixels_painte
 
 ```bash
 kind delete cluster --name pixel-war
-kubectl get all -n pixelwar 
+kubectl get all -n pixelwar
 terraform state list
 ```
 
