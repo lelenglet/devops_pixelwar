@@ -144,8 +144,8 @@ secret pour recup les pods sur argoCD
 ```bash
 kubectl create secret docker-registry ghcr-secret \
   --docker-server=ghcr.io \
-  --docker-username=EvanC2611 \
-  --docker-password=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 \
+  --docker-username=$USER_GITHUB \
+  --docker-password=$USER_GITHUB \
   --namespace=pixelwar
 ```
 
