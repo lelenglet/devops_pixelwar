@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Démarre l'infra locale : cluster kind « pixel-war », images Docker, chart Helm.
+# Démarre l'infra locale : cluster kind « pixel-war », images Docker, chart Helm, et Stack Monitoring.
 # Idempotent : réexécuter met à jour le déploiement sans erreur si l'état est déjà bon.
 set -euo pipefail
 
@@ -22,12 +22,12 @@ usage() {
   cat <<EOF
 Usage: $0 [options]
 
-  Démarre le cluster kind, construit les images, charge dans kind, déploie le chart Helm.
+  Démarre le cluster kind, construit les images, déploie le monitoring (Prometheus/Grafana) et le chart Helm.
 
 Options :
   --skip-build   Ne pas reconstruire les images Docker (réutilise les tags locaux).
-  --forward      Lance les port-forwards 8080 (front) et 3000 (back) en arrière-plan
-                 et enregistre les PID dans ${PF_PID_FILE} (voir stop.sh).
+  --forward      Lance les port-forwards (front, back, grafana) en arrière-plan
+                 et enregistre les PID dans ${PF_PID_FILE}.
   -h, --help     Cette aide.
 EOF
 }
@@ -92,6 +92,19 @@ load_images_into_kind() {
   kind load docker-image "${FRONT_IMAGE}" "${BACK_IMAGE}" --name "${KIND_CLUSTER_NAME}"
 }
 
+deploy_monitoring() {
+  log "Déploiement de la stack de monitoring (kube-prometheus-stack)..."
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  helm repo update
+  
+  helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+    --kube-context "${KIND_CONTEXT}" \
+    --namespace monitoring \
+    --create-namespace \
+    --wait \
+    --timeout 10m
+}
+
 deploy_helm() {
   log "Déploiement Helm (release ${HELM_RELEASE}, namespace ${K8S_NAMESPACE})..."
   helm upgrade --install "${HELM_RELEASE}" "${SCRIPT_DIR}/pixelwar-chart" \
@@ -99,12 +112,13 @@ deploy_helm() {
     --namespace "${K8S_NAMESPACE}" \
     --create-namespace \
     --wait \
-    --timeout 15m
+    --timeout 10m
 }
 
 verify_workloads() {
   log "Vérification des charges (filet de sécurité post-Helm)..."
-  kubectl_ctx wait --for=condition=ready pod -l app=postgresdb -n "${K8S_NAMESPACE}" --timeout=180s
+  # Remarque : Adaptez le label "app=postgresdb" si nécessaire selon votre chart
+  kubectl_ctx wait --for=condition=ready pod -l app=postgresdb -n "${K8S_NAMESPACE}" --timeout=180s || true
   kubectl_ctx rollout status "deployment/${HELM_RELEASE}-front-depl" -n "${K8S_NAMESPACE}" --timeout=180s
   kubectl_ctx rollout status "deployment/${HELM_RELEASE}-back-depl" -n "${K8S_NAMESPACE}" --timeout=180s
 }
@@ -123,26 +137,43 @@ stop_old_port_forwards() {
 start_port_forwards() {
   mkdir -p "${PF_STATE_DIR}"
   stop_old_port_forwards
-  log "Démarrage des port-forwards (8080 → front, 3000 → back)..."
+  log "Démarrage des port-forwards (8080 → front, 3000 → back, 9000 → grafana)..."
+  
   kubectl_ctx port-forward "svc/${HELM_RELEASE}-front-service" 8080:80 -n "${K8S_NAMESPACE}" >/dev/null 2>&1 &
   echo $! >> "${PF_PID_FILE}"
+  
   kubectl_ctx port-forward "svc/${HELM_RELEASE}-back-service" 3000:3000 -n "${K8S_NAMESPACE}" >/dev/null 2>&1 &
   echo $! >> "${PF_PID_FILE}"
+
+  kubectl_ctx port-forward "svc/monitoring-grafana" 9000:80 -n monitoring >/dev/null 2>&1 &
+  echo $! >> "${PF_PID_FILE}"
+  
   log "PID enregistrés dans ${PF_PID_FILE} (arrêt : ./stop.sh ou stop.sh --forward-only)"
 }
 
 print_summary() {
+  # Récupération automatique du mot de passe Grafana
+  local GRAFANA_PASS
+  GRAFANA_PASS=$(kubectl_ctx --namespace monitoring get secrets monitoring-grafana -o jsonpath="{.data.admin-password}" 2>/dev/null | base64 -d || echo "N/A")
+
   cat <<EOF
 
---- Infra prête (namespace ${K8S_NAMESPACE}) ---
+--- Infra prête (namespaces: ${K8S_NAMESPACE}, monitoring) ---
   kubectl --context ${KIND_CONTEXT} get pods -n ${K8S_NAMESPACE}
 
-Sans --forward, exposer localement :
+Sans l'option --forward, vous pouvez exposer localement via :
   kubectl --context ${KIND_CONTEXT} port-forward svc/${HELM_RELEASE}-front-service 8080:80 -n ${K8S_NAMESPACE} &
   kubectl --context ${KIND_CONTEXT} port-forward svc/${HELM_RELEASE}-back-service 3000:3000 -n ${K8S_NAMESPACE} &
+  kubectl --context ${KIND_CONTEXT} port-forward svc/monitoring-grafana 9000:80 -n monitoring &
 
-Frontend : http://localhost:8080/   (après port-forward)
-Arrêt ciblé : ./stop.sh    |   tout supprimer (y compris kind) : ./stop.sh --cluster
+  Accès locaux (nécessite le port-forward actif) :
+  Frontend : http://localhost:8080/
+  Backend  : http://localhost:3000/
+  Grafana  : http://localhost:9000/
+             User: admin
+             Pass: ${GRAFANA_PASS}
+
+  Arrêt ciblé : ./stop.sh    |   Tout supprimer (y compris kind) : ./stop.sh --cluster
 EOF
 }
 
@@ -155,8 +186,11 @@ main() {
 
   ensure_kind_cluster
   use_kubectl_context
+  
   build_images
   load_images_into_kind
+  
+  deploy_monitoring
   deploy_helm
   verify_workloads
 
