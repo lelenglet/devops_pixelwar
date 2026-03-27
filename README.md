@@ -15,7 +15,7 @@ Tailles des images obtenues :
 - Frontend : 92MB
 - Backend : 207MB
 
-Les images sont relativement optimisées notamment grâce à un découpage des fichiers Dockerfile en plusieurs stages et un choix statégique dans l'ordre des commandes.
+Les images sont relativement optimisées notamment grâce à un découpage des fichiers Dockerfile en plusieurs stages et un choix stratégique dans l'ordre des commandes.
 
 ### Kubernetes
 
@@ -42,7 +42,7 @@ Plusieurs manières de déployer la solution :
 | Helm (à la racine) | Déploiement direct du chart sur un cluster déjà là et déjà ciblé par ton contexte kubectl. |
 | `./run.sh` | Tout-en-un local : cluster kind + build images + chargement dans kind + Helm. Pratique pour dev. |
 | Terraform | Infra déclarative : applique le chart (et ce que le code Terraform gère) ; utile si tu veux gérer le déploiement avec Terraform. |
-| Ansible | Automatisation / playbook : appelle Helm (collection kubernetes.core) ; utile si ton flux passe par Ansible |
+| Ansible | Automatisation / playbook : appelle Helm en CLI ; utile si ton flux passe par Ansible |
 
 Après avoir déployé la solution il faut rediriger les ports avec :
 ```bash
@@ -61,7 +61,7 @@ helm upgrade --install pixelwar ./pixelwar-chart \
 ```
 
 ### `./run.sh`
-Script idempotent pour lancer et stoper l'infra.
+Script idempotent pour lancer et stopper l'infra.
 ```bash
 ./run.sh
 ./run.sh --skip-build   # réutiliser les images déjà construites
@@ -77,7 +77,7 @@ terraform init
 terraform plan
 terraform apply
 ```
-Si vous obtenez une erreur `Cannot create resource that already exists`, vous pouvez la supprimer pour la recréer depuis terrafor avec `kubectl delete namespace pixelwar`
+Si vous obtenez une erreur `Cannot create resource that already exists`, vous pouvez la supprimer pour la recréer depuis terraform avec `kubectl delete namespace pixelwar`
 
 
 ### Ansible
@@ -85,11 +85,9 @@ Si vous obtenez une erreur `Cannot create resource that already exists`, vous po
 Déploie le même chart qu'avec `helm`
 ```bash
 cd ansible
-ansible-galaxy collection install -r requirements.yml
 ansible-playbook playbooks/deploy.yml
 ```
-
-Variables par défaut : `kind-pixel-war`, namespace `pixelwar` (voir `ansible/group_vars/all.yml`).
+Il faut attendre quelques secondes pour que les services se lancent et que le front puisse accéder à l'API.
 
 ## Tester l'infra
 
@@ -123,7 +121,7 @@ terraform state list
 
 # Chart Helm
 
-Deploiement des manifests avec une seule commande, avec création du namespace :
+Déploiement des manifests avec une seule commande, avec création du namespace :
 ```
 helm upgrade --install pixelwar ./pixelwar-chart \
   --namespace pixelwar \
