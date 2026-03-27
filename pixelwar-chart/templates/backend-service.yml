@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ .Release.Name }}-back-service"
+  name: "pixelwar-back-service"
   namespace: {{ .Values.namespace | default "default" | quote }}
   labels:
     app: {{ .Values.backend.labels.app | quote }}
