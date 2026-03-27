@@ -3,8 +3,10 @@ apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
   extraPortMappings:
-  - containerPort: 30201
+  - containerPort: 30201 # Front
     hostPort: 30201
+  - containerPort: 30000 # Back
+    hostPort: 30000
     listenAddress: "0.0.0.0"
 - role: worker
 - role: worker
