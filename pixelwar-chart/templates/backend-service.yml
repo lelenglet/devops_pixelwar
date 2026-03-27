@@ -12,5 +12,5 @@ spec:
     port: {{ .Values.service.port }}
     targetPort: {{ .Values.service.targetPort }}
     {{- if eq .Values.service.type "NodePort" }}
-    nodePort: {{ .Values.service.nodePort | default 30080 }}
+    nodePort: {{ .Values.service.nodePort | default 30000 }}
     {{- end }}
