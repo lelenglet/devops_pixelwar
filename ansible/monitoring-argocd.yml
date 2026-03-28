@@ -8,20 +8,21 @@ spec:
   source:
     repoURL: 'https://prometheus-community.github.io/helm-charts'
     chart: kube-prometheus-stack
-    targetRevision: 58.2.2 # It's best practice to pin a version
+    targetRevision: 58.2.2
     helm:
-      parameters:
-        - name: grafana.service.type
-          value: NodePort
-        - name: grafana.service.nodePort
-          value: "30090"
-        # Allow Prometheus to find ServiceMonitors in all namespaces
-        - name: prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues
-          value: "false"
-        - name: prometheus.prometheusSpec.serviceMonitorSelector
-          value: "{}"
-        - name: prometheus.prometheusSpec.serviceMonitorNamespaceSelector
-          value: "{}"
+      values: |
+        grafana:
+          service:
+            type: NodePort
+            nodePort: 30090
+        prometheus:
+          prometheusSpec:
+            serviceMonitorSelector: {}
+            serviceMonitorNamespaceSelector: {}
+            podMonitorSelector: {}
+            podMonitorNamespaceSelector: {}
+            serviceMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorNamespaceSelectorNilUsesHelmValues: false
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: monitoring
@@ -31,5 +32,17 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - Replace=true
+      - ServerSideApply=true
+  ignoreDifferences:
+    - group: ""
+      kind: ServiceAccount
+      jsonPointers:
+        - /automountServiceAccountToken
+    - group: monitoring.coreos.com
+      kind: Prometheus
+      jsonPointers:
+        - /spec/serviceMonitorSelector
+        - /spec/serviceMonitorNamespaceSelector
+        - /spec/podMonitorSelector
+        - /spec/podMonitorNamespaceSelector
 

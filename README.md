@@ -62,7 +62,7 @@ kind load docker-image app-frontend:v1 --name pixel-war
 kind load docker-image app-backend:v1 --name pixel-war
 ```
 
-## Déploiement :
+## Déploiement
 
 Plusieurs manières de déployer la solution :
 
@@ -144,8 +144,8 @@ secret pour recup les pods sur argoCD
 ```bash
 kubectl create secret docker-registry ghcr-secret \
   --docker-server=ghcr.io \
-  --docker-username=EvanC2611 \
-  --docker-password=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 \
+  --docker-username=$GITHUB_USER \
+  --docker-password=$GITHUB_TOKEN_PASSWORD \
   --namespace=pixelwar
 ```
 
