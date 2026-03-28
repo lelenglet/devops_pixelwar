@@ -29,7 +29,7 @@ frontend:
     app: frontend
     track: stable
   service:
-    type: ClusterIP
+    type: NodePort
     port: 80
     targetPort: 80
   env:
@@ -47,8 +47,8 @@ backend:
   service:
     type: NodePort
     port: 3000
-    targetPort: 3000
-    nodePort: 30081
+    targetPort: 30000
+    nodePort: 30000
   env:
     redis: redis://redis-service:6379
     postgres: postgres://postgres:password@postgresdb:5432/pixelwar

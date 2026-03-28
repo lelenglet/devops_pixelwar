@@ -15,5 +15,5 @@ spec:
     port: {{ .Values.backend.service.port }}
     targetPort: {{ .Values.backend.service.targetPort }}
     {{- if eq .Values.backend.service.type "NodePort" }}
-    nodePort: {{ .Values.backend.service.nodePort | default 30080 }}
+    nodePort: {{ .Values.backend.service.nodePort | default 30000 }}
     {{- end }}

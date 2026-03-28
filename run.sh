@@ -92,6 +92,11 @@ load_images_into_kind() {
   kind load docker-image "${FRONT_IMAGE}" "${BACK_IMAGE}" --name "${KIND_CLUSTER_NAME}"
 }
 
+create_namespace(){
+  log "Création du namespace pixelwar"
+  kubectl create namespace ${K8S_NAMESPACE}
+}
+
 deploy_monitoring() {
   log "Déploiement de la stack de monitoring (kube-prometheus-stack)..."
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -190,8 +195,9 @@ main() {
   build_images
   load_images_into_kind
   
-  deploy_monitoring
-  deploy_helm
+  #deploy_monitoring
+  create_namespace
+  #deploy_helm
   verify_workloads
 
   if [[ "${WITH_FORWARD}" -eq 1 ]]; then

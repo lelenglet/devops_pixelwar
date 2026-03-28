@@ -5,6 +5,8 @@ nodes:
   extraPortMappings:
   - containerPort: 30201
     hostPort: 30201
+  - containerPort: 30000
+    hostPort: 30000
     listenAddress: "0.0.0.0"
 - role: worker
 - role: worker
