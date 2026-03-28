@@ -8,8 +8,9 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/socket.io": {
-        target: "http://localhost:3000",
-        ws: true
+        target: process.env.VITE_SOCKET_URL,
+        ws: true,
+        changeOrigin: true
       }
     }
   }

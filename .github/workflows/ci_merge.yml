@@ -1,9 +1,15 @@
-name: CI-merge Pixel War
+name: CI merge
 
 on:
   push:
     branches:
-      - main
+      - argocd
+      - prometheusMergeArgo
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACK: ${{ github.repository }}-backend
+  IMAGE_NAME_FRONT: ${{ github.repository }}-frontend
 
 jobs:
   test:
@@ -31,34 +37,39 @@ jobs:
           npm ci
           npm test || echo "Pas de tests définis, on continue"
 
-  build:
-    runs-on: ubuntu-latest
+  build-and-push:
     needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - name: Docker images creation
-        run: |
-          cd backend
-          docker build -t app-backend:v1 .
-          cd ../frontend
-          docker build -t app-frontend:v1 .
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
 
-      - name: Cluster kind creation
-        run: |
-          kind create cluster --name pixel-war --config kind-config.yaml
-      - name: Loading app images
-        run: |
-          kind load docker-image app-frontend:v1 --name pixel-war
-          kind load docker-image app-backend:v1 --name pixel-war
-      - name: Manifest deployement
-        run: |
-          kubectl apply -f kubernetes/namespace.yaml
-          kubectl apply -f kubernetes/db/
-          kubectl apply -f kubernetes/backend/
-          kubectl apply -f kubernetes/frontend/
-      - name: Wait for pods
-        run: |
-          kubectl wait --for=condition=ready pod --all -n pixelwar --timeout=60s
-      - name: Manifest display
-        run: |
-          kubectl get all -n pixelwar
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACK }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACK }}:${{ github.sha }}
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONT }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONT }}:${{ github.sha }}
+

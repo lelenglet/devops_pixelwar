@@ -39,6 +39,13 @@ resource "helm_release" "pixelwar" {
   timeout = var.helm_timeout_seconds
 }
 
+### Monitoring ────────────────────────────────────────────────────────────────────
+
+resource "kubernetes_manifest" "backend_servicemonitor" {
+  manifest = yamldecode(file("${local.kubernetes_path}/backend/service-monitor.yml"))
+  depends_on = [kubernetes_manifest.backend_service]
+}
+
 ### Outputs ───────────────────────────────────────────────────────────────────
 output "namespace" {
   description = "Namespace Kubernetes du déploiement Pixel War"
