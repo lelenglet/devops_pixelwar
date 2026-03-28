@@ -198,7 +198,7 @@ main() {
   #deploy_monitoring
   create_namespace
   #deploy_helm
-  verify_workloads
+  #verify_workloads
 
   if [[ "${WITH_FORWARD}" -eq 1 ]]; then
     start_port_forwards
