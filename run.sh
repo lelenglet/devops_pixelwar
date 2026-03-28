@@ -94,7 +94,8 @@ load_images_into_kind() {
 
 create_namespace(){
   log "Création du namespace pixelwar"
-  kubectl create namespace ${K8S_NAMESPACE}
+  kubectl create namespace ${K8S_NAMESPACE} \
+    --dry-run=client -o yaml | kubectl apply -f -
 }
 deploy_helm() {
   log "Déploiement Helm (release ${HELM_RELEASE}, namespace ${K8S_NAMESPACE})..."
@@ -163,7 +164,7 @@ main() {
   load_images_into_kind
   create_namespace
   #deploy_helm
-  verify_workloads
+  #verify_workloads
 
   if [[ "${WITH_FORWARD}" -eq 1 ]]; then
     start_port_forwards
