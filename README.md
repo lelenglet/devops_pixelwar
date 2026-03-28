@@ -129,22 +129,23 @@ Il faut attendre quelques secondes pour que les services se lancent et que le fr
 
 Port-forward argoCD sur localhost
 
-```
+```bash
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
 Récupérer le mot de passe d'accès à argoCD pour id = admin
 
-```
+```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
 ```
 
 secret pour recup les pods sur argoCD
-```
+
+```bash
 kubectl create secret docker-registry ghcr-secret \
   --docker-server=ghcr.io \
-  --docker-username=lelenglet \
-  --docker-password=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 \
+  --docker-username=EvanC2611 \
+  --docker-password=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 \
   --namespace=pixelwar
 ```
 

@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://prometheus-community.github.io/helm-charts'
+    chart: kube-prometheus-stack
+    targetRevision: 58.2.2 # It's best practice to pin a version
+    helm:
+      parameters:
+        - name: grafana.service.type
+          value: NodePort
+        - name: grafana.service.nodePort
+          value: "30090"
+        # Allow Prometheus to find ServiceMonitors in all namespaces
+        - name: prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues
+          value: "false"
+        - name: prometheus.prometheusSpec.serviceMonitorSelector
+          value: "{}"
+        - name: prometheus.prometheusSpec.serviceMonitorNamespaceSelector
+          value: "{}"
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - Replace=true
+
