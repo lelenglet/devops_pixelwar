@@ -3,8 +3,7 @@ name: CI merge
 on:
   push:
     branches:
-      - argocd
-      - prometheusMergeArgo
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -72,4 +71,3 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONT }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONT }}:${{ github.sha }}
-
