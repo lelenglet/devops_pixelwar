@@ -28,8 +28,39 @@
         namespace: argocd
         src: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
         state: present
-
+    
     - name: Déployer l'application Pixel War via ArgoCD
       kubernetes.core.k8s:
         state: present
         src: "{{ playbook_dir }}/../argocd.yaml"
+
+    - name: "Mettre à jour l'application ArgoCD via K8s"
+      kubernetes.core.k8s:
+        state: patched
+        kind: Application
+        api_version: argoproj.io/v1alpha1 # Spécification cruciale de l'API ArgoCD
+        name: pixelwar-app
+        namespace: argocd
+        definition:
+          spec:
+            source:
+              helm:
+                parameters:
+                  # NodePorts pour l'accès sans port-forward
+                  - name: "frontend.service.type"
+                    value: "NodePort"
+                  - name: "frontend.service.nodePort"
+                    value: "30201"
+                  - name: "backend.service.type"
+                    value: "NodePort"
+                  - name: "backend.service.nodePort"
+                    value: "30000"
+                  # Images GHCR
+                  - name: "frontend.image.repository"
+                    value: "ghcr.io/lelenglet/devops_pixelwar-frontend"
+                  - name: "frontend.image.tag"
+                    value: "v1"
+                  - name: "backend.image.repository"
+                    value: "ghcr.io/lelenglet/devops_pixelwar-backend"
+                  - name: "backend.image.tag"
+                    value: "v1"

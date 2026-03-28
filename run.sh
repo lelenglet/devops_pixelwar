@@ -92,6 +92,10 @@ load_images_into_kind() {
   kind load docker-image "${FRONT_IMAGE}" "${BACK_IMAGE}" --name "${KIND_CLUSTER_NAME}"
 }
 
+create_namespace(){
+  log "Création du namespace pixelwar"
+  kubectl create namespace ${K8S_NAMESPACE}
+}
 deploy_helm() {
   log "Déploiement Helm (release ${HELM_RELEASE}, namespace ${K8S_NAMESPACE})..."
   helm upgrade --install "${HELM_RELEASE}" "${SCRIPT_DIR}/pixelwar-chart" \
@@ -157,7 +161,8 @@ main() {
   use_kubectl_context
   build_images
   load_images_into_kind
-  deploy_helm
+  create_namespace
+  #deploy_helm
   verify_workloads
 
   if [[ "${WITH_FORWARD}" -eq 1 ]]; then
