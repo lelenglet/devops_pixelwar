@@ -81,6 +81,14 @@ Pour accéder à notre application vous pouvez rentrer directement dans votre na
 
 Lorsque vous avez terminé vous pouvez exécuté `./stop.sh --cluster` pour supprimer tous les éléments précédemment initialisés.
 
+### Resilience
+
+```bash
+kubectl delete pod -l app=backend -n pixelwar
+```
+
+Le pod se reconstruit automatiquement
+
 ## Dockerfile
 
 Création des images :
@@ -222,7 +230,7 @@ Après avoir deploy avec argocd
 Expose grafana sur le port 9000
 
 ```bash
-kubectl port-forward -n monitoring svc/monitoring-grafana 9000:80
+kubectl port-forward -n monitoring svc/monitoring-stack-grafana 9000:80
 ```
 
 username: admin
