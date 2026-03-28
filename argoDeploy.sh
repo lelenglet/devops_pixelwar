@@ -3,6 +3,8 @@
 echo "--- 1. Mise en place du cluster Kind ---"
 ./runArgo.sh
 
+sleep 30
+
 echo "--- 2. Lancement du déploiement Ansible ---"
 cd ansible
 ansible-playbook playbooks/deployArgo.yml

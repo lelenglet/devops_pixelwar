@@ -11,83 +11,29 @@
     chart_path: "{{ repo_root }}/pixelwar-chart"
 
   tasks:
-    - name: Install Prometheus Operator CRDs
-      kubernetes.core.k8s:
-        state: present
-        src: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
-      loop:
-        - alertmanagerconfigs
-        - alertmanagers
-        - podmonitors
-        - probes
-        - prometheusagents        # <-- this is what's missing
-        - prometheuses
-        - prometheusrules
-        - scrapeconfigs
-        - servicemonitors
-        - thanosrulers
-
-    - name: Create Monitoring Namespace
-      kubernetes.core.k8s:
-        name: monitoring
-        kind: Namespace
-        state: present
-
     - name: Vérifier que le chart est présent
       ansible.builtin.stat:
         path: "{{ chart_path }}/Chart.yaml"
       register: chart_dir
       failed_when: not chart_dir.stat.exists
 
-    - name: Create ArgoCD Namespace
-      kubernetes.core.k8s:
-        name: argocd
-        kind: Namespace
-        state: present
-
-    - name: Install ArgoCD
-      kubernetes.core.k8s:
-        namespace: argocd
-        src: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-        state: present
-    
-    - name: Déployer l'application Pixel War via ArgoCD
-      kubernetes.core.k8s:
-        state: present
-        src: "{{ playbook_dir }}/../argocd.yaml"
-
-    - name: "Mettre à jour l'application ArgoCD via K8s"
-      kubernetes.core.k8s:
-        state: patched
-        kind: Application
-        api_version: argoproj.io/v1alpha1 # Spécification cruciale de l'API ArgoCD
-        name: pixelwar-app
-        namespace: argocd
-        definition:
-          spec:
-            source:
-              helm:
-                parameters:
-                  # NodePorts pour l'accès sans port-forward
-                  - name: "frontend.service.type"
-                    value: "NodePort"
-                  - name: "frontend.service.nodePort"
-                    value: "30201"
-                  - name: "backend.service.type"
-                    value: "NodePort"
-                  - name: "backend.service.nodePort"
-                    value: "30000"
-                  # Images GHCR
-                  - name: "frontend.image.repository"
-                    value: "ghcr.io/lelenglet/devops_pixelwar-frontend"
-                  - name: "frontend.image.tag"
-                    value: "latest"
-                  - name: "backend.image.repository"
-                    value: "ghcr.io/lelenglet/devops_pixelwar-backend"
-                  - name: "backend.image.tag"
-                    value: "latest"
-
-    - name: Déployer le stack Monitoring via ArgoCD
-      kubernetes.core.k8s:
-        state: present
-        src: "{{ playbook_dir }}/../monitoring-argocd.yml"
+    - name: Installer / mettre à jour le release Helm
+      ansible.builtin.command:
+        argv:
+          - helm
+          - upgrade
+          - --install
+          - "{{ helm_release_name }}"
+          - "{{ chart_path }}"
+          - --namespace
+          - "{{ k8s_namespace }}"
+          - --create-namespace
+          - --kubeconfig
+          - "{{ kubeconfig_path }}"
+          - --kube-context
+          - "{{ kube_context }}"
+          - --wait
+          - --timeout
+          - 15m
+          - -f
+          - "{{ chart_path }}/values.yaml"

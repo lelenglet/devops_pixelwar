@@ -12,6 +12,7 @@ readonly KIND_CONTEXT="kind-${KIND_CLUSTER_NAME}"
 readonly HELM_RELEASE="pixelwar"
 readonly K8S_NAMESPACE="pixelwar"
 readonly ARGO_NAMESPACE="argocd"
+readonly MONITO_NAMESPACE="monitoring"
 readonly PF_STATE_DIR="${SCRIPT_DIR}/.pixelwar"
 readonly PF_PID_FILE="${PF_STATE_DIR}/portforward.pids"
 
@@ -99,6 +100,13 @@ delete_namespace_if_any() {
     log "Namespace ${ARGO_NAMESPACE} en cours de suppression (asynchrone)."
   else
     log "Namespace ${ARGO_NAMESPACE} déjà absent."
+  fi
+  if kubectl --context "${KIND_CONTEXT}" get namespace "${MONITO_NAMESPACE}" >/dev/null 2>&1; then
+    log "Suppression du namespace ${MONITO_NAMESPACE}..."
+    kubectl --context "${KIND_CONTEXT}" delete namespace "${MONITO_NAMESPACE}" --wait=false >/dev/null
+    log "Namespace ${MONITO_NAMESPACE} en cours de suppression (asynchrone)."
+  else
+    log "Namespace ${MONITO_NAMESPACE} déjà absent."
   fi
 }
 
