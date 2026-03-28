@@ -1,4 +1,42 @@
 # devops_pixelwar
+Ce projet a été réalisé par Chassefeyre Alexandre, Creton Evan, Lenglet Léa, Louis-Max Harter
+
+Le déploiement par ArgoCD est notre méthode principale. Les autres méthodes sont décrites plus précisément dans la partie déploiement
+
+## Déploiement par ArgoCD 
+
+Comme argoCD se base uniquement sur la récupération de packages créés par la CI dans notre projet, nous n'utilisons plus le déploiement par Helm. Nous avons donc mis en place un script qui déploie le cluster kind et qui appelle ensuite le ansible pour le déployer via argoCD.
+```bash
+./argoDeploy.sh
+```
+
+La durée de la commande est de environ 8 minutes pour attendre la disponibilités des différents services sur le cluster.
+
+Pour accéder au argoCD UI, le script va vous renvoyer les identifiants sous le forme 
+```bash 
+Login: admin 
+Password: ...
+```
+Le bon fonctionnement du système nécessite la création d'un secret Github (Personal Access Token (Classic)) avec les accès `read:packages` et `repo` en ligne de commande :
+```bash
+ kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=$Github_username \
+  --docker-password=$Github_PAT \
+  --namespace=pixelwar
+```
+
+Enfin vous devez port-forward argoCD : 
+```bash
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+Pour accéder à notre application vous pouvez rentrer directement dans votre navigateur l'adresse :
+[localhost](http://localhost:30201/)
+
+Lorsque vous avez terminé vous pouvez exécuté `./stop.sh --cluster` pour supprimer tous les éléments précédemment initialisés.
+
+
 
 ## Initialisation
 ### Dockerfile
@@ -35,22 +73,12 @@ kind load docker-image app-backend:v1 --name pixel-war
 
 ## Déploiement :
 
-Plusieurs manières de déployer la solution :
-
-| Outil | Rôle |
-|-------|------|
-| Helm (à la racine) | Déploiement direct du chart sur un cluster déjà là et déjà ciblé par ton contexte kubectl. |
-| `./run.sh` | Tout-en-un local : cluster kind + build images + chargement dans kind + Helm. Pratique pour dev. |
-| Terraform | Infra déclarative : applique le chart (et ce que le code Terraform gère) ; utile si tu veux gérer le déploiement avec Terraform. |
-| Ansible | Automatisation / playbook : appelle Helm en CLI ; utile si ton flux passe par Ansible |
-
-Après avoir déployé la solution il faut rediriger les ports avec :
+Après avoir déployé la solution (sauf pour argoCD) il faut rediriger les ports avec :
 ```bash
 kubectl port-forward svc/pixelwar-front-service 8080:80 -n pixelwar
 kubectl port-forward svc/pixelwar-back-service 3000:3000 -n pixelwar
 ```
 Vous pouvez ensuite vous connecter sur [localhost:8080](http://localhost:8080/).
-
  
 ### Helm
 ```bash
@@ -78,7 +106,6 @@ terraform plan
 terraform apply
 ```
 Si vous obtenez une erreur `Cannot create resource that already exists`, vous pouvez la supprimer pour la recréer depuis terraform avec `kubectl delete namespace pixelwar`
-
 
 ### Ansible
 
