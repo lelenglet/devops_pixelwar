@@ -11,6 +11,6 @@ spec:
   - protocol: "TCP"
     port: {{ .Values.frontend.service.port }}
     targetPort: {{ .Values.frontend.service.targetPort }}
-    {{- if eq .Values.backend.service.type "NodePort" }}
-    nodePort: {{ .Values.backend.service.nodePort | default 30201 }}
+    {{- if eq .Values.frontend.service.type "NodePort" }}
+    nodePort: {{ .Values.frontend.service.nodePort | default 30201 }}
     {{- end }}

@@ -48,7 +48,7 @@ backend:
     type: NodePort
     port: 3000
     targetPort: 30000
-    nodePort: 30000
+    nodePort: 30201
   env:
     redis: redis://redis-service:6379
     postgres: postgres://postgres:password@postgresdb:5432/pixelwar
