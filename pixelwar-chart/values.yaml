@@ -22,14 +22,14 @@ postgresql:
 frontend:
   replicaCount: 1
   image:
-    repository: app-frontend
-    tag: v1
-    pullPolicy: IfNotPresent
+    repository: ghcr.io/lelenglet/devops_pixelwar-frontend
+    tag: latest
+    pullPolicy: Always 
   labels:
     app: frontend
     track: stable
   service:
-    type: LoadBalancer
+    type: NodePort
     port: 80
     targetPort: 80
   env:
@@ -38,16 +38,16 @@ frontend:
 backend:
   replicaCount: 1
   image:
-    repository: app-backend
-    tag: v1
-    pullPolicy: IfNotPresent
+    repository: ghcr.io/lelenglet/devops_pixelwar-backend
+    tag: latest
+    pullPolicy: Always
   labels:
     app: backend
     track: stable
   service:
     type: NodePort
     port: 3000
-    targetPort: 3000
+    targetPort: 30000
   env:
     redis: redis://redis-service:6379
     postgres: postgres://postgres:password@postgresdb:5432/pixelwar
