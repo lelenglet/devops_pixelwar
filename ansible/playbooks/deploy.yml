@@ -11,6 +11,17 @@
     chart_path: "{{ repo_root }}/pixelwar-chart"
 
   tasks:
+    - name: Install Prometheus Operator CRDs
+      kubernetes.core.k8s:
+        state: present
+        src: https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+
+    - name: Create Monitoring Namespace
+      kubernetes.core.k8s:
+        name: monitoring
+        kind: Namespace
+        state: present
+
     - name: Vérifier que le chart est présent
       ansible.builtin.stat:
         path: "{{ chart_path }}/Chart.yaml"
