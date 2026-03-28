@@ -6,11 +6,11 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/lelenglet/devops_pixelwar.git'
-    targetRevision: prometheusMergeArgo
-    path: pixelwar-chart   
+    repoURL: "https://github.com/lelenglet/devops_pixelwar.git"
+    targetRevision: main
+    path: pixelwar-chart
   destination:
-    server: 'https://kubernetes.default.svc'
+    server: "https://kubernetes.default.svc"
     namespace: pixelwar
   syncPolicy:
     automated:
