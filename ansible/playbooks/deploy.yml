@@ -38,7 +38,7 @@
       kubernetes.core.k8s:
         state: patched
         kind: Application
-        api_version: argoproj.io/v1alpha1 # Spécification cruciale de l'API ArgoCD
+        api_version: argoproj.io/v1alpha1
         name: pixelwar-app
         namespace: argocd
         definition:
@@ -46,7 +46,6 @@
             source:
               helm:
                 parameters:
-                  # NodePorts pour l'accès sans port-forward
                   - name: "frontend.service.type"
                     value: "NodePort"
                   - name: "frontend.service.nodePort"
@@ -55,12 +54,11 @@
                     value: "NodePort"
                   - name: "backend.service.nodePort"
                     value: "30000"
-                  # Images GHCR
                   - name: "frontend.image.repository"
                     value: "ghcr.io/lelenglet/devops_pixelwar-frontend"
                   - name: "frontend.image.tag"
-                    value: "v1"
+                    value: "latest"
                   - name: "backend.image.repository"
                     value: "ghcr.io/lelenglet/devops_pixelwar-backend"
                   - name: "backend.image.tag"
-                    value: "v1"
+                    value: "latest"
